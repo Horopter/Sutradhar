@@ -1,44 +1,113 @@
+/**
+ * Authentication Composable
+ * Handles user authentication state and session management
+ */
+
+export interface User {
+  userId: string
+  sessionId: string
+  email?: string
+}
+
 export const useAuth = () => {
   const user = useState<User | null>('user', () => null)
   const sessionId = useState<string | null>('sessionId', () => null)
+  const guestLoginInitiated = useState<boolean>('guest-login-initiated', () => false)
 
-  const { post } = useApi()
+  const api = useApi()
+
+  // Auto-login as guest if not authenticated
+  const ensureGuestSession = async () => {
+    if (process.client && !user.value && !guestLoginInitiated.value) {
+      guestLoginInitiated.value = true
+      try {
+        const response = await api.auth.guest()
+        // Handle both formats: userId from response or from user.id
+        const userId = response.userId || response.user?.id || response.user?.userId
+        const sessionIdValue = response.sessionId
+        
+        if (response.ok && sessionIdValue && userId) {
+          user.value = {
+            userId: userId,
+            sessionId: sessionIdValue,
+          }
+          sessionId.value = sessionIdValue
+        } else if (response.ok && sessionIdValue) {
+          // If no userId but we have sessionId, use sessionId as userId (GUEST format)
+          user.value = {
+            userId: sessionIdValue,
+            sessionId: sessionIdValue,
+          }
+          sessionId.value = sessionIdValue
+        }
+      } catch (error) {
+        console.warn('Failed to auto-login as guest:', error)
+        // Create a client-side fallback guest session
+        const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+        const guestId = `GUEST_${nonce}`
+        user.value = {
+          userId: guestId,
+          sessionId: guestId,
+        }
+        sessionId.value = guestId
+      }
+    }
+  }
 
   const loginAsGuest = async () => {
     try {
-      const result = await post<{ ok: boolean; user: User; sessionId: string }>('/auth/guest', {})
-      if (result.ok) {
-        user.value = result.user
-        sessionId.value = result.sessionId
-        return { ok: true, user: result.user }
+      const response = await api.auth.guest()
+      // Handle both formats: userId from response or from user.id
+      const userId = response.userId || response.user?.id || response.user?.userId
+      const sessionIdValue = response.sessionId
+      
+      if (response.ok && sessionIdValue && userId) {
+        user.value = {
+          userId: userId,
+          sessionId: sessionIdValue,
+        }
+        sessionId.value = sessionIdValue
+        return { ok: true }
+      } else if (response.ok && sessionIdValue) {
+        // If no userId but we have sessionId, use sessionId as userId (GUEST format)
+        user.value = {
+          userId: sessionIdValue,
+          sessionId: sessionIdValue,
+        }
+        sessionId.value = sessionIdValue
+        return { ok: true }
       }
-      return { ok: false, error: 'Failed to create guest session' }
+      return { ok: false, error: response.error || 'Login failed' }
     } catch (error: any) {
-      return { ok: false, error: error.message }
+      // Create a client-side fallback guest session
+      const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+      const guestId = `GUEST_${nonce}`
+      user.value = {
+        userId: guestId,
+        sessionId: guestId,
+      }
+      sessionId.value = guestId
+      return { ok: true }
     }
   }
 
-  const sendMagicLink = async (email: string) => {
-    try {
-      const result = await post<{ ok: boolean; message?: string }>('/auth/magic', { email })
-      return result
-    } catch (error: any) {
-      return { ok: false, error: error.message }
-    }
+  const loginWithMagicLink = async (email: string) => {
+    const response = await api.auth.magicLink(email)
+    return response
   }
 
-  const verifyToken = async (token: string) => {
-    try {
-      const result = await post<{ ok: boolean; user: User; sessionId: string }>('/auth/verify', { token })
-      if (result.ok) {
-        user.value = result.user
-        sessionId.value = result.sessionId
-        return { ok: true, user: result.user }
+  const verifyMagicLink = async (token: string) => {
+    const response = await api.auth.verify(token)
+    if (response.ok && response.sessionId && response.userId) {
+      user.value = {
+        userId: response.userId,
+        sessionId: response.sessionId,
+        email: response.email,
       }
-      return { ok: false, error: 'Invalid token' }
-    } catch (error: any) {
-      return { ok: false, error: error.message }
+      sessionId.value = response.sessionId
+      return { ok: true }
     }
+    return { ok: false, error: response.error || 'Verification failed' }
   }
 
   const logout = () => {
@@ -46,29 +115,23 @@ export const useAuth = () => {
     sessionId.value = null
   }
 
-  const isAuthenticated = computed(() => !!user.value)
-  const isGuest = computed(() => user.value?.role === 'guest')
+  const isAuthenticated = computed(() => user.value !== null)
+  const isGuest = computed(() => user.value !== null && !user.value.email)
+
+  // Initialize guest session on client-side
+  if (process.client) {
+    ensureGuestSession()
+  }
 
   return {
-    user,
-    sessionId,
-    loginAsGuest,
-    sendMagicLink,
-    verifyToken,
-    logout,
+    user: readonly(user),
+    sessionId: readonly(sessionId),
     isAuthenticated,
-    isGuest
+    isGuest,
+    loginAsGuest,
+    loginWithMagicLink,
+    verifyMagicLink,
+    logout,
+    ensureGuestSession,
   }
 }
-
-interface User {
-  id: string
-  email?: string
-  name: string
-  role: 'user' | 'guest' | 'admin'
-  createdAt: number
-  lastLoginAt?: number
-  streak?: number
-  badges?: string[]
-}
-

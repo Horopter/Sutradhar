@@ -152,8 +152,8 @@ export async function mossBridgeSearchImages(
     throw new Error(`moss_bridge_image_query_${r.status}: ${errorText}`);
   }
   
-  const data = await r.json();
-  return data.results || [];
+  const data: any = await r.json();
+  return (data?.results || []) as any[];
 }
 
 /**
@@ -163,7 +163,7 @@ export async function mossBridgeGetImage(imageId: string): Promise<ImageSearchRe
   const r = await fetch(`${MOSS_BRIDGE}/images/index/${encodeURIComponent(imageId)}`);
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`moss_bridge_image_get_${r.status}`);
-  const data = await r.json();
+  const data: any = await r.json();
   return data.image || null;
 }
 

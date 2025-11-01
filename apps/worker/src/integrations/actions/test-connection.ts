@@ -2,8 +2,8 @@
  * Test Rube.app connection with Composio credentials
  */
 
-import { env } from "../env";
-import { log } from "../log";
+import { env } from "../../env";
+import { log } from "../../log";
 
 export async function testRubeConnection() {
   const projectId = env.RUBE_PROJECT_ID || env.COMPOSIO_API_KEY; // Fallback to Composio key if available
@@ -62,12 +62,13 @@ export async function testRubeConnection() {
           const url = `${baseUrl}${endpoint}`;
           log.info(`  Testing ${url}...`);
           
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            ...(method.headers as Record<string, string>),
+          };
           const response = await fetch(url, {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              ...method.headers,
-            },
+            headers,
           });
 
           const status = response.status;

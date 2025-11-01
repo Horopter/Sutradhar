@@ -1,53 +1,52 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="text-center mb-12">
-      <h1 class="text-6xl font-bold text-halloween-orange mb-4 animate-glow">
-        🎃 Apex Academy
-      </h1>
-      <p class="text-2xl text-halloween-ghost/80 mb-8">
-        Master Computer Science with AI-Powered Learning
-      </p>
-      
-      <div class="flex justify-center space-x-4 mb-12">
-        <NuxtLink v-if="!isAuthenticated" to="/login" class="btn-primary text-xl px-8 py-4">
-          Continue as Guest
-        </NuxtLink>
-        <NuxtLink v-else to="/subjects" class="btn-primary text-xl px-8 py-4">
-          Continue Learning
-        </NuxtLink>
-        <NuxtLink to="/subjects" class="btn-secondary text-xl px-8 py-4">
-          Explore Subjects
-        </NuxtLink>
+  <div class="min-h-screen bg-gradient-to-br from-halloween-bg via-halloween-dark to-halloween-bg">
+    <div class="container mx-auto px-4 py-16">
+      <div class="text-center mb-12">
+        <h1 class="text-5xl font-bold text-halloween-orange mb-4 animate-pulse-slow">🎃 Apex Academy</h1>
+        <p class="text-xl text-halloween-ghost mb-8">Learn Computer Science with AI-powered tutoring</p>
+        
+        <div class="flex gap-4 justify-center">
+          <NuxtLink
+            to="/catalog"
+            class="btn-primary"
+          >
+            {{ isAuthenticated ? 'Browse Courses' : 'Get Started' }}
+          </NuxtLink>
+          <NuxtLink
+            v-if="!isAuthenticated || isGuest"
+            to="/login"
+            class="btn-secondary"
+          >
+            Login / Sign Up
+          </NuxtLink>
+        </div>
       </div>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-      <div class="card text-center">
-        <div class="text-4xl mb-4">📚</div>
-        <h3 class="text-xl font-bold text-halloween-orange mb-2">5 CS Subjects</h3>
-        <p class="text-halloween-ghost/70">Learn C++, Java, Web Dev, Android, and ML</p>
-      </div>
-      
-      <div class="card text-center">
-        <div class="text-4xl mb-4">🤖</div>
-        <h3 class="text-xl font-bold text-halloween-orange mb-2">AI Tutoring</h3>
-        <p class="text-halloween-ghost/70">Get instant hints and explanations from Sutradhar</p>
-      </div>
-      
-      <div class="card text-center">
-        <div class="text-4xl mb-4">🏆</div>
-        <h3 class="text-xl font-bold text-halloween-orange mb-2">Track Progress</h3>
-        <p class="text-halloween-ghost/70">Earn badges, maintain streaks, and level up</p>
+      <div class="grid md:grid-cols-3 gap-8 mt-16">
+        <div class="card">
+          <div class="text-4xl mb-4">📚</div>
+          <h3 class="text-xl font-semibold mb-2 text-halloween-orange">Interactive Courses</h3>
+          <p class="text-halloween-ghost/80">Learn through hands-on lessons and practical examples</p>
+        </div>
+        <div class="card">
+          <div class="text-4xl mb-4">🤖</div>
+          <h3 class="text-xl font-semibold mb-2 text-halloween-orange">AI Tutor</h3>
+          <p class="text-halloween-ghost/80">Get instant help and explanations from your AI assistant</p>
+        </div>
+        <div class="card">
+          <div class="text-4xl mb-4">💻</div>
+          <h3 class="text-xl font-semibold mb-2 text-halloween-orange">Code Practice</h3>
+          <p class="text-halloween-ghost/80">Practice coding with real-time feedback and hints</p>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const { isAuthenticated } = useAuth()
 
 useHead({
-  title: 'Apex Academy - Home'
+  title: 'Apex Academy - Learn Computer Science',
 })
 </script>
-

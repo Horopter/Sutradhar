@@ -50,7 +50,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const { post } = useApi()
 const { sessionId } = useAuth()
 
@@ -60,11 +60,11 @@ const posting = ref(false)
 const sending = ref(false)
 const creating = ref(false)
 const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
+const messageType = ref('success')
 
-const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
+function showMessage(msg: string, type?: string) {
   message.value = msg
-  messageType.value = type
+  messageType.value = type || 'success'
   setTimeout(() => {
     message.value = ''
   }, 5000)

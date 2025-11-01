@@ -1,183 +1,123 @@
 <template>
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div v-if="loading" class="text-center py-12">
-      <p class="text-halloween-ghost/60">Loading quiz...</p>
-    </div>
+  <div class="min-h-screen bg-halloween-bg">
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+      <NuxtLink to="/catalog" class="text-halloween-orange hover:text-halloween-pumpkin hover:underline mb-4 inline-block flex items-center gap-2">
+        <span>←</span> Back to Catalog
+      </NuxtLink>
 
-    <div v-else-if="error" class="card bg-red-500/20 border-red-500">
-      <p class="text-red-400">{{ error }}</p>
-    </div>
-
-    <div v-else>
-      <h1 class="text-3xl font-bold text-halloween-orange mb-6">{{ quiz?.title || 'Quiz' }}</h1>
-
-      <div v-if="!started" class="card">
-        <p class="mb-4">{{ questions.length }} questions</p>
-        <button @click="startQuiz" class="btn-primary w-full">Start Quiz</button>
+      <div v-if="loading" class="text-center py-12">
+        <div class="text-lg text-halloween-ghost/60">Loading quiz...</div>
       </div>
 
-      <div v-else-if="!finished">
-        <div class="card mb-4">
-          <div class="flex justify-between items-center">
-            <span>Question {{ currentQuestion + 1 }} of {{ questions.length }}</span>
-            <span>Time: {{ formatTime(elapsedTime) }}</span>
-          </div>
-        </div>
+      <div v-else-if="error" class="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-red-300">
+        {{ error }}
+      </div>
 
+      <div v-else-if="quiz">
         <div class="card">
-          <h2 class="text-xl font-bold mb-4">{{ questions[currentQuestion].question }}</h2>
-          <div class="space-y-3">
-            <label
-              v-for="(option, idx) in questions[currentQuestion].options"
-              :key="idx"
-              class="flex items-center p-4 bg-halloween-dark rounded-lg cursor-pointer hover:bg-halloween-card transition"
-              :class="answers[currentQuestion] === idx ? 'border-2 border-halloween-orange' : 'border-2 border-transparent'"
-            >
-              <input
-                type="radio"
-                :value="idx"
-                v-model="answers[currentQuestion]"
-                class="mr-3"
-              />
-              <span>{{ option }}</span>
-            </label>
-          </div>
+          <h1 class="text-3xl font-bold mb-6 text-halloween-orange">{{ quiz.title }}</h1>
 
-          <div class="flex justify-between mt-6">
-            <button
-              @click="previousQuestion"
-              :disabled="currentQuestion === 0"
-              class="btn-secondary"
+          <form @submit.prevent="handleSubmit" class="space-y-8">
+            <div
+              v-for="(question, index) in quiz.questions"
+              :key="question.id"
+              class="border-b border-halloween-orange/20 pb-6 last:border-0"
             >
-              Previous
-            </button>
-            <button
-              v-if="currentQuestion < questions.length - 1"
-              @click="nextQuestion"
-              class="btn-primary"
-            >
-              Next
-            </button>
-            <button
-              v-else
-              @click="submitQuiz"
-              class="btn-primary"
-            >
-              Submit
-            </button>
-          </div>
-        </div>
-      </div>
+              <h3 class="text-lg font-semibold mb-4 text-halloween-ghost">{{ index + 1 }}. {{ question.question }}</h3>
+              <div class="space-y-2">
+                <label
+                  v-for="(option, optIndex) in question.options"
+                  :key="optIndex"
+                  class="flex items-center p-3 border border-halloween-orange/30 rounded-lg hover:bg-halloween-dark hover:border-halloween-orange/50 cursor-pointer transition"
+                >
+                  <input
+                    type="radio"
+                    :name="`question-${question.id}`"
+                    :value="optIndex"
+                    v-model="answers[question.id]"
+                    class="mr-3 accent-halloween-orange"
+                  />
+                  <span class="text-halloween-ghost">{{ option }}</span>
+                </label>
+              </div>
+            </div>
 
-      <div v-else class="card">
-        <h2 class="text-3xl font-bold text-halloween-orange mb-4">Results</h2>
-        <div class="text-4xl font-bold mb-4">{{ score }}%</div>
-        <div class="mb-4">
-          <span :class="passed ? 'text-green-400' : 'text-red-400'" class="text-xl font-bold">
-            {{ passed ? '✅ Passed' : '❌ Failed' }}
-          </span>
+            <div class="flex gap-4">
+              <button
+                type="submit"
+                :disabled="submitting || !allAnswered"
+                class="btn-primary disabled:opacity-50"
+              >
+                {{ submitting ? 'Submitting...' : 'Submit Quiz' }}
+              </button>
+            </div>
+          </form>
         </div>
-        <p class="text-halloween-ghost/70">You got {{ correctAnswers }} out of {{ questions.length }} correct.</p>
-        <NuxtLink to="/subjects" class="btn-primary mt-6 inline-block">Back to Subjects</NuxtLink>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+definePageMeta({
+  middleware: 'auth',
+})
+
 const route = useRoute()
-const id = computed(() => route.params.id as string)
-
-const quiz = ref(null)
-const questions = ref([])
-const answers = ref([])
-const started = ref(false)
-const finished = ref(false)
-const currentQuestion = ref(0)
-const startTime = ref(0)
-const elapsedTime = ref(0)
-const score = ref(0)
-const correctAnswers = ref(0)
-const passed = ref(false)
-const loading = ref(true)
-const error = ref('')
-
+const router = useRouter()
+const api = useApi()
 const { user } = useAuth()
-const { get, post } = useApi()
 
-let timer: any = null
+const quizId = route.params.id as string
+const quiz = ref<any>(null)
+const answers = ref<Record<string, number>>({})
+const loading = ref(true)
+const submitting = ref(false)
+const error = ref('')
+const startTime = ref(Date.now())
 
-const formatTime = (seconds: number) => {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
-
-const startQuiz = () => {
-  started.value = true
-  startTime.value = Date.now()
-  timer = setInterval(() => {
-    elapsedTime.value = Math.floor((Date.now() - startTime.value) / 1000)
-  }, 1000)
-}
-
-const nextQuestion = () => {
-  if (currentQuestion.value < questions.value.length - 1) {
-    currentQuestion.value++
-  }
-}
-
-const previousQuestion = () => {
-  if (currentQuestion.value > 0) {
-    currentQuestion.value--
-  }
-}
-
-const submitQuiz = async () => {
-  finished.value = true
-  if (timer) clearInterval(timer)
-
-  try {
-    const result = await post('/quiz/' + id.value + '/attempt', {
-      userId: user.value?.id || 'guest',
-      answers: answers.value,
-      startedAt: startTime.value,
-      finishedAt: Date.now()
-    })
-
-    if (result.ok) {
-      score.value = result.score
-      correctAnswers.value = result.correct
-      passed.value = result.passed
-    }
-  } catch (err: any) {
-    error.value = err.message
-  }
-}
+const allAnswered = computed(() => {
+  if (!quiz.value) return false
+  return quiz.value.questions.every((q: any) => answers.value[q.id] !== undefined)
+})
 
 onMounted(async () => {
-  try {
-    const result = await get<{ ok: boolean; quiz: any }>('/quiz/' + id.value)
-    if (result.ok) {
-      quiz.value = result.quiz
-      questions.value = result.quiz.questions || []
-      answers.value = new Array(questions.value.length).fill(null)
-    } else {
-      error.value = 'Quiz not found'
-    }
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load quiz'
-  } finally {
-    loading.value = false
+  loading.value = true
+  const response = await api.quiz.get(quizId)
+  if (response.ok && response.quiz) {
+    quiz.value = response.quiz
+  } else {
+    error.value = response.error || 'Failed to load quiz'
   }
+  loading.value = false
 })
 
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
-})
+const handleSubmit = async () => {
+  if (!quiz.value || !user.value) return
+
+  submitting.value = true
+  const answerArray = quiz.value.questions.map((q: any) => ({
+    questionId: q.id,
+    answer: answers.value[q.id],
+  }))
+
+  const response = await api.quiz.submit(
+    quizId,
+    user.value.userId,
+    answerArray,
+    startTime.value,
+    Date.now()
+  )
+
+  if (response.ok) {
+    router.push(`/quiz/${quizId}/results`)
+  } else {
+    error.value = response.error || 'Failed to submit quiz'
+  }
+  submitting.value = false
+}
 
 useHead({
-  title: 'Quiz - Apex Academy'
+  title: quiz.value ? `${quiz.value.title} - Apex Academy` : 'Quiz - Apex Academy',
 })
 </script>
-

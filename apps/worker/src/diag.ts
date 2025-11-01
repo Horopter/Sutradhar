@@ -17,10 +17,13 @@ export async function runRubeDiag() {
   const cal   = await createCalendarEvent("Sutradhar Diag AMA", start, end, "Automated diagnostics", env.GCAL_CALENDAR_ID);
   const gh    = await createGithubIssue("[Diag] Test issue", "This is a diagnostic test issue.", env.GITHUB_REPO_SLUG || "test-org/test-repo");
 
+  // Check if actions are mocked by checking environment
+  const isMocked = String(env.MOCK_ACTIONS || "false").toLowerCase() === "true";
+
   // log to Convex (if not already via routes, this is extra-safe)
-  await Convex.actions.log({ sessionId, type: "slack",    status: slack.mocked ? "mocked" : "ok", payload: {text:"Diag ping"}, result: slack });
-  await Convex.actions.log({ sessionId, type: "calendar", status: cal.mocked   ? "mocked" : "ok", payload: {start, end},       result: cal });
-  await Convex.actions.log({ sessionId, type: "github",   status: gh.mocked    ? "mocked" : "ok", payload: {},                 result: gh });
+  await Convex.actions.log({ sessionId, type: "slack",    status: (slack as any).mocked || isMocked ? "mocked" : "ok", payload: {text:"Diag ping"}, result: slack });
+  await Convex.actions.log({ sessionId, type: "calendar", status: isMocked ? "mocked" : "ok", payload: {start, end},       result: cal });
+  await Convex.actions.log({ sessionId, type: "github",   status: (gh as any).mocked || isMocked ? "mocked" : "ok", payload: {},                 result: gh });
 
   const listResult = await Convex.actions.listBySession({ sessionId });
   // Convex API returns: { status: "success", value: [...] }

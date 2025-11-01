@@ -1,6 +1,6 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <h1 class="text-4xl font-bold text-halloween-orange mb-8">Subjects</h1>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen bg-halloween-bg">
+    <h1 class="text-4xl font-bold text-halloween-orange mb-8">📚 Subjects</h1>
     
     <div v-if="loading" class="text-center py-12">
       <p class="text-halloween-ghost/60">Loading subjects...</p>
@@ -27,7 +27,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const subjects = ref<Array<{ slug: string; title: string; description: string; lessonCount?: number }>>([])
 const loading = ref(true)
 const error = ref('')

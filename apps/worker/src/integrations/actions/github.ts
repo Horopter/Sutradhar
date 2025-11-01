@@ -77,7 +77,8 @@ function getGitHubConnectedAccountId(): string {
 }
 
 function getComposioUserId(): string {
-  const userId = env.COMPOSIO_USER_ID || env.RUBE_USER_ID;
+  // GitHub uses "default" user ID if specified, otherwise fall back to standard user ID
+  const userId = env.GITHUB_USER_ID || env.COMPOSIO_USER_ID || env.RUBE_USER_ID;
   if (!userId) {
     throw new Error('COMPOSIO_USER_ID or RUBE_USER_ID not configured. Set it in .secrets.env');
   }

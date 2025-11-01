@@ -41,8 +41,11 @@ const envSchema = z.object({
   MOCK_ACTIONS: z.string().default('false'),
   // Composio Connection IDs (store in .secrets.env)
   GITHUB_CONNECTED_ACCOUNT_ID: z.string().optional(),
+  GITHUB_USER_ID: z.string().optional(),
   SLACK_CONNECTED_ACCOUNT_ID: z.string().optional(),
+  SLACK_USER_ID: z.string().optional(),
   GCAL_CONNECTED_ACCOUNT_ID: z.string().optional(),
+  GCAL_USER_ID: z.string().optional(),
   COMPOSIO_ACCOUNT_ID: z.string().optional(),
   COMPOSIO_USER_ID: z.string().optional(),
   SLACK_CHANNEL_ID: z.string().optional(),
@@ -86,7 +89,7 @@ const envSchema = z.object({
   LOG_JSON: z.string().default('false'),
   SENTRY_DSN: z.string().optional(),
   // Caching
-  REDIS_URL: z.string().url().optional(),
+  REDIS_URL: z.string().optional(), // URL validation happens at runtime when Redis is actually used
   USE_REDIS: z.string().default('false'), // Force Redis in dev if needed
   CACHE_DEFAULT_TTL: z.string().default('3600').transform(Number),
   // CORS & API
@@ -106,8 +109,12 @@ let env: Env;
 
 try {
   env = envSchema.parse(process.env);
-} catch (error) {
-  console.error('❌ Invalid environment variables:', error);
+} catch (error: any) {
+  const errorMsg = error?.message || error?.issues || String(error);
+  console.error('❌ Invalid environment variables:', errorMsg);
+  if (error?.issues) {
+    console.error('Validation issues:', JSON.stringify(error.issues, null, 2));
+  }
   process.exit(1);
 }
 

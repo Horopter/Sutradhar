@@ -6,6 +6,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { promises as fs } from 'fs';
+import { accessSync } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { Convex } from '../convexClient';
@@ -25,7 +26,7 @@ const magicTokens = new Map<string, { email: string; expiresAt: number }>();
 // ========== Auth Routes ==========
 
 router.post('/auth/guest', rateLimiters.standard, asyncHandler(async (req: Request, res: Response) => {
-  const result = await Convex.mutations('users:createGuest', {});
+  const result: any = await Convex.mutations('users:createGuest', {});
   if (!result || result.skipped) {
     // Fallback guest user
     const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -89,7 +90,7 @@ router.post('/auth/verify', rateLimiters.strict, validate({
   
   magicTokens.delete(token);
   
-  const result = await Convex.mutations('users:createOrGet', {
+  const result: any = await Convex.mutations('users:createOrGet', {
     email: tokenData.email
   });
   
@@ -113,7 +114,7 @@ router.get('/catalog', rateLimiters.standard, asyncHandler(async (req: Request, 
   
   let dataRepoPath = possiblePaths.find(p => {
     try {
-      fs.accessSync(p);
+      accessSync(p);
       return true;
     } catch {
       return false;
@@ -210,8 +211,9 @@ router.get('/lesson/:id', rateLimiters.standard, asyncHandler(async (req: Reques
   let lessonId = id;
   
   // Try to find in Convex first
-  const allCourses = await Convex.queries('courses:list', {});
-  for (const course of (allCourses || [])) {
+  const allCourses: any = await Convex.queries('courses:list', {});
+  const coursesArray = Array.isArray(allCourses) ? allCourses : [];
+  for (const course of coursesArray) {
     const lesson = await Convex.queries('lessons:get', {
       courseSlug: course.slug,
       lessonId: id
@@ -233,7 +235,7 @@ router.get('/lesson/:id', rateLimiters.standard, asyncHandler(async (req: Reques
     
     let dataRepoPath = possiblePaths.find(p => {
       try {
-        require('fs').accessSync(p);
+        accessSync(p);
         return true;
       } catch {
         return false;
@@ -269,7 +271,7 @@ router.get('/lesson/:id', rateLimiters.standard, asyncHandler(async (req: Reques
     
     let dataRepoPath = possiblePaths.find(p => {
       try {
-        require('fs').accessSync(p);
+        accessSync(p);
         return true;
       } catch {
         return false;
@@ -313,7 +315,7 @@ router.get('/course/:slug/images', rateLimiters.standard, asyncHandler(async (re
       });
       
       if (mossResponse.ok) {
-        const mossData = await mossResponse.json();
+        const mossData: any = await mossResponse.json();
         if (mossData.images && Array.isArray(mossData.images)) {
           for (const img of mossData.images) {
             await Convex.mutations('images:upsert', {
@@ -379,13 +381,13 @@ router.post('/quiz/:id/attempt', rateLimiters.standard, validate({
   const { id } = req.params;
   const { userId, answers, startedAt, finishedAt } = req.body;
   
-  const quiz = await Convex.queries('quizzes:get', { quizId: id });
+  const quiz: any = await Convex.queries('quizzes:get', { quizId: id });
   if (!quiz) {
     return res.status(404).json({ ok: false, error: 'Quiz not found' });
   }
   
   // Calculate score
-  const questions = quiz.questions || [];
+  const questions = (quiz.questions || []) as Array<{ correctAnswer: any }>;
   let correct = 0;
   for (let i = 0; i < questions.length; i++) {
     if (answers[i] === questions[i].correctAnswer || 
@@ -443,7 +445,7 @@ router.post('/code/:assignmentId/hint', rateLimiters.strict, timeouts.expensive,
   const { assignmentId } = req.params;
   const { code, failingTest, sessionId } = req.body;
   
-  const assignment = await Convex.queries('codeAssignments:get', { assignmentId });
+  const assignment: any = await Convex.queries('codeAssignments:get', { assignmentId });
   if (!assignment) {
     return res.status(404).json({ ok: false, error: 'Assignment not found' });
   }
@@ -451,8 +453,8 @@ router.post('/code/:assignmentId/hint', rateLimiters.strict, timeouts.expensive,
   const systemPrompt = `You are a coding tutor. Provide hints and Socratic questions. **Never write the full solution.** 
 If code is requested, show at most a 3-line snippet or pseudocode; redact the rest.
 Focus on guiding the student to discover the solution themselves.`;
-  
-  const userPrompt = `Assignment: ${assignment.prompt}\n\nStudent's current code:\n\`\`\`${assignment.language}\n${code}\n\`\`\`\n\n${failingTest ? `Failing test: ${failingTest}` : 'Provide a hint to get started.'}`;
+
+  const userPrompt = `Assignment: ${assignment.prompt || ''}\n\nStudent's current code:\n\`\`\`${assignment.language || 'javascript'}\n${code}\n\`\`\`\n\n${failingTest ? `Failing test: ${failingTest}` : 'Provide a hint to get started.'}`;
   
   const result = await llmService.chat({
     system: systemPrompt,
@@ -547,8 +549,8 @@ router.post('/assistant/answer', rateLimiters.perSession, timeouts.expensive, va
   
   res.json({
     ok: true,
-    text: result.text || '',
-    sources: result.sources || []
+    text: (result as any).text || '',
+    sources: (result as any).sources || []
   });
 }));
 
@@ -618,9 +620,9 @@ router.get('/progress', rateLimiters.standard, validate({
 }), asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.query;
   
-  const attempts = await Convex.queries('quizzes:getAttempts', { userId });
-  const events = await Convex.queries('events:getByUser', { userId, limit: 100 });
-  const user = await Convex.queries('users:get', { userId: userId as any });
+  const attempts: any = await Convex.queries('quizzes:getAttempts', { userId });
+  const events: any = await Convex.queries('events:getByUser', { userId, limit: 100 });
+  const user: any = await Convex.queries('users:get', { userId: userId as any });
   
   res.json({
     ok: true,
@@ -693,10 +695,10 @@ router.get('/room/:id/join', rateLimiters.standard, asyncHandler(async (req: Req
     return res.status(500).json({ ok: false, error: 'Failed to get token' });
   }
   
-  const tokenData = await tokenResult.json();
+  const tokenData: any = await tokenResult.json();
   
   // Generate agenda from progress (LLM summary)
-  const attempts = await Convex.queries('quizzes:getAttempts', { userId });
+  const attempts: any = await Convex.queries('quizzes:getAttempts', { userId });
   const agendaPrompt = `Summarize this student's progress into a study agenda: ${JSON.stringify(attempts)}`;
   
   const agendaResult = await llmService.chat({
@@ -727,10 +729,11 @@ router.post('/admin/seed/index', rateLimiters.lenient, timeouts.indexing, asyncH
 }));
 
 router.post('/admin/images/cache', rateLimiters.lenient, timeouts.standard, asyncHandler(async (req: Request, res: Response) => {
-  const courses = await Convex.queries('courses:list', {});
+  const courses: any = await Convex.queries('courses:list', {});
   const cached = [];
+  const coursesArray = Array.isArray(courses) ? courses : [];
   
-  for (const course of (courses || [])) {
+  for (const course of coursesArray) {
     try {
       const imageResult = await fetch(`${req.protocol}://${req.get('host')}/course/${course.slug}/images?keywords=${course.title}`, {
         method: 'GET'

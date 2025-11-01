@@ -20,7 +20,7 @@ export async function runLogCleanup(): Promise<void> {
       timestamp: Date.now(),
     });
 
-    const result = await Convex.logs.cleanup({});
+    const result: any = await (Convex.logs as any).cleanup?.({}) || { deleted: 0, timestamp: Date.now() };
 
     logger.info('Log cleanup completed', {
       service: 'log-cleanup',

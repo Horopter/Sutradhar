@@ -30,21 +30,23 @@ export class ProgressAgent extends BaseAgent {
         Convex.queries('users:get', { userId: userId as any }),
         Convex.queries('quizzes:getAttempts', { userId }),
         Convex.queries('events:getByUser', { userId, limit: 100 })
-      ]);
+      ]) as [any, any, any];
       
       if (!user) {
         return this.error('User not found');
       }
       
-      const passedQuizzes = (attempts || []).filter((a: any) => a.passed).length;
+      const attemptsArray = Array.isArray(attempts) ? attempts : [];
+      const eventsArray = Array.isArray(events) ? events : [];
+      const passedQuizzes = attemptsArray.filter((a: any) => a.passed).length;
       
       return this.success({
         userId,
         streak: user.streak || 0,
         badges: user.badges || [],
-        quizAttempts: (attempts || []).length,
+        quizAttempts: attemptsArray.length,
         passedQuizzes,
-        recentEvents: (events || []).slice(0, 10)
+        recentEvents: eventsArray.slice(0, 10)
       });
     } catch (error: any) {
       log.error('ProgressAgent.getProgress failed', error);
@@ -58,7 +60,7 @@ export class ProgressAgent extends BaseAgent {
   async updateStreak(userId: string, increment: number = 1, context?: AgentContext): Promise<AgentResult<{ streak: number }>> {
     try {
       await Convex.mutations('users:updateStreak', { userId: userId as any, increment });
-      const user = await Convex.queries('users:get', { userId: userId as any });
+      const user: any = await Convex.queries('users:get', { userId: userId as any });
       
       return this.success({
         streak: user?.streak || 0
@@ -75,7 +77,7 @@ export class ProgressAgent extends BaseAgent {
   async awardBadge(userId: string, badge: string, context?: AgentContext): Promise<AgentResult<{ badges: string[] }>> {
     try {
       await Convex.mutations('users:addBadge', { userId: userId as any, badge });
-      const user = await Convex.queries('users:get', { userId: userId as any });
+      const user: any = await Convex.queries('users:get', { userId: userId as any });
       
       return this.success({
         badges: user?.badges || []

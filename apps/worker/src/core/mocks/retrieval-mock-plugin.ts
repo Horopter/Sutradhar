@@ -216,9 +216,9 @@ export class RetrievalMockPlugin extends BaseMockPlugin implements IRetrievalPlu
     const documents: IndexDocument[] = [];
 
     for (const filePath of filePaths) {
+      const relativePath = path.relative(dataRepoDir, filePath);
       try {
         const content = fs.readFileSync(filePath, 'utf8');
-        const relativePath = path.relative(dataRepoDir, filePath);
         // Split into chunks
         const chunks = content.split(/\n(?=##? )/g).filter(Boolean);
         

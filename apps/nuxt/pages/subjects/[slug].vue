@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen bg-halloween-bg">
     <div v-if="loading" class="text-center py-12">
       <p class="text-halloween-ghost/60">Loading...</p>
     </div>
@@ -60,7 +60,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
 

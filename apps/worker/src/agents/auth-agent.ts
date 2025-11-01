@@ -21,38 +21,78 @@ export class AuthAgent extends BaseAgent {
   /**
    * Create a guest user session
    */
-  async createGuest(context?: AgentContext): Promise<AgentResult<{ user: any; sessionId: string }>> {
+  async createGuest(context?: AgentContext): Promise<AgentResult<{ user: any; userId: string; sessionId: string }>> {
     try {
-      const result: any = await Convex.mutations('users:createGuest', {});
+      // Generate GUEST_<NONCE> format using crypto for secure nonce
+      const nonce = crypto.randomBytes(16).toString('hex');
+      const guestId = `GUEST_${nonce}`;
+      const sessionId = `GUEST_${nonce}`;
       
-      if (!result || (result as any).skipped) {
-        // Fallback guest user
-        const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-        const user = {
-          id: guestId,
-          email: `guest_${guestId}@apex.local`,
-          name: `Guest ${guestId.substring(6, 12)}`,
+      // Try to create in Convex if available
+      const result: any = await Convex.mutations('users:createGuest', {
+        userId: guestId,
+        sessionId
+      }).catch(() => null);
+      
+      // Use result if successful, otherwise use fallback
+      let userId = guestId;
+      let user: any;
+      
+      if (result && result.userId && !(result as any).skipped) {
+        userId = result.userId;
+        user = result.user || {
+          id: userId,
+          userId: userId,
+          email: undefined,
+          name: `Guest User`,
           role: 'guest',
           createdAt: Date.now(),
           lastLoginAt: Date.now(),
           streak: 0,
           badges: []
         };
-        
-        return this.success({
-          user,
-          sessionId: `session_${guestId}`
-        });
+      } else {
+        // Fallback guest user with GUEST_<NONCE> format
+        user = {
+          id: guestId,
+          userId: guestId,
+          email: undefined,
+          name: `Guest User`,
+          role: 'guest',
+          createdAt: Date.now(),
+          lastLoginAt: Date.now(),
+          streak: 0,
+          badges: []
+        };
       }
-
-      const sessionId = `session_${(result as any).userId}`;
+      
       return this.success({
-        user: (result as any).user,
+        user,
+        userId,
         sessionId
       });
     } catch (error: any) {
       log.error('AuthAgent.createGuest failed', error);
-      return this.error(error.message || 'Failed to create guest session');
+      // Even on error, create a fallback guest session
+      const nonce = crypto.randomBytes(16).toString('hex');
+      const guestId = `GUEST_${nonce}`;
+      const sessionId = `GUEST_${nonce}`;
+      
+      return this.success({
+        user: {
+          id: guestId,
+          userId: guestId,
+          email: undefined,
+          name: `Guest User`,
+          role: 'guest',
+          createdAt: Date.now(),
+          lastLoginAt: Date.now(),
+          streak: 0,
+          badges: []
+        },
+        userId: guestId,
+        sessionId
+      });
     }
   }
 

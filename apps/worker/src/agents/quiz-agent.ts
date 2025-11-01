@@ -50,14 +50,14 @@ export class QuizAgent extends BaseAgent {
    */
   async submitAttempt(attempt: QuizAttempt, context?: AgentContext): Promise<AgentResult<QuizResult>> {
     try {
-      const quiz = await Convex.queries('quizzes:get', { quizId: attempt.quizId });
+      const quiz: any = await Convex.queries('quizzes:get', { quizId: attempt.quizId });
       
       if (!quiz) {
         return this.error('Quiz not found');
       }
       
       // Calculate score
-      const questions = quiz.questions || [];
+      const questions = (quiz.questions || []) as Array<{ correctAnswer: any }>;
       let correct = 0;
       
       for (let i = 0; i < questions.length; i++) {
@@ -70,7 +70,7 @@ export class QuizAgent extends BaseAgent {
         }
       }
       
-      const score = (correct / questions.length) * 100;
+      const score = questions.length > 0 ? (correct / questions.length) * 100 : 0;
       const passed = score >= (quiz.passScore || 70);
       
       // Record attempt
@@ -111,8 +111,9 @@ export class QuizAgent extends BaseAgent {
    */
   async getUserAttempts(userId: string, context?: AgentContext): Promise<AgentResult<any[]>> {
     try {
-      const attempts = await Convex.queries('quizzes:getAttempts', { userId });
-      return this.success(attempts || []);
+      const attempts: any = await Convex.queries('quizzes:getAttempts', { userId });
+      const attemptsArray = Array.isArray(attempts) ? attempts : [];
+      return this.success(attemptsArray);
     } catch (error: any) {
       log.error('QuizAgent.getUserAttempts failed', error);
       return this.error(error.message || 'Failed to get quiz attempts');

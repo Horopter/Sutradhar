@@ -53,13 +53,13 @@ export class CodeAgent extends BaseAgent {
    */
   async runCode(request: CodeRunRequest, context?: AgentContext): Promise<AgentResult<CodeRunResult>> {
     try {
-      const assignment = await Convex.queries('codeAssignments:get', { assignmentId: request.assignmentId });
+      const assignment: any = await Convex.queries('codeAssignments:get', { assignmentId: request.assignmentId });
       
       if (!assignment) {
         return this.error('Assignment not found');
       }
       
-      const tests = assignment.tests || [];
+      const tests = (assignment.tests || []) as Array<{ name: string; code: string; expected?: any; actual?: any }>;
       const results: CodeRunResult['cases'] = [];
       let passed = 0;
       

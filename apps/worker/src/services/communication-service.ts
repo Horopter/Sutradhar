@@ -174,6 +174,48 @@ export class CommunicationService {
     }
   }
 
+  /**
+   * Send email directly (public method for API)
+   */
+  async sendEmail(payload: { to: string[]; cc?: string[]; bcc?: string[]; subject: string; body: string; htmlBody?: string; fromAddress?: string; fromName?: string; threadId?: string }): Promise<any> {
+    try {
+      const result = await emailService.sendEmail({
+        to: payload.to,
+        cc: payload.cc,
+        bcc: payload.bcc,
+        subject: payload.subject,
+        text: payload.body + (payload.htmlBody ? `\n\n${payload.htmlBody}` : ''),
+      });
+      
+      if (!result.ok || !result.data) {
+        throw new Error(result.error || 'Email send failed');
+      }
+      
+      return result.data;
+    } catch (error: any) {
+      throw new Error(`Email send failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Post Slack message directly (public method for API)
+   */
+  async postSlackMessage(payload: { channelId: string; text: string; threadTs?: string }): Promise<any> {
+    try {
+      const result: any = await slackPostMessage(payload.text, payload.channelId, payload.threadTs);
+      
+      return {
+        ts: result.ts || result.messageId || `msg-${Date.now()}`,
+        channel: payload.channelId,
+        text: payload.text,
+        threadTs: payload.threadTs,
+        ...result,
+      };
+    } catch (error: any) {
+      throw new Error(`Slack send failed: ${error.message}`);
+    }
+  }
+
   private async _sendEmailMessage(channel: Channel, message: MessageInput): Promise<MessageResult> {
     try {
       const result = await emailService.sendEmail({

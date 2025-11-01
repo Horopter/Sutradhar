@@ -9,6 +9,11 @@ import { RedisCache } from './redis-cache';
 import { ICache } from './types';
 import { log } from '../../log';
 
+// Re-export types and classes
+export { MemoryCache } from './memory-cache';
+export { RedisCache } from './redis-cache';
+export { ICache } from './types';
+
 let cacheInstance: ICache | null = null;
 
 export function getCache(): ICache {

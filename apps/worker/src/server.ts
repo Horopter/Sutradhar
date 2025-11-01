@@ -2,7 +2,7 @@
  * Server - Using scalable plugin architecture
  */
 
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import cors from 'cors';
@@ -124,7 +124,7 @@ app.use(requestContext); // Add request ID and timing
 app.use(trackHealth); // Track health for all endpoints
 
 // Metrics middleware
-app.use((req: Request, res: Response, next: express.NextFunction) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   
   res.on('finish', () => {
@@ -1115,8 +1115,11 @@ app.post("/dev/replay-webhook",
 // Sentry error handler (before general error handler)
 if (env.SENTRY_DSN) {
   try {
-    const { Handlers } = require('@sentry/node');
-    app.use(Handlers.errorHandler());
+    const sentryNode = require('@sentry/node');
+    const Handlers = sentryNode.Handlers || sentryNode;
+    if (Handlers && Handlers.errorHandler) {
+      app.use(Handlers.errorHandler());
+    }
   } catch (e) {
     // Sentry error handler not available, continue without it
   }

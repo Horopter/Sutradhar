@@ -99,10 +99,11 @@ export class ImageAgent extends BaseAgent {
    */
   async cacheAllImages(context?: AgentContext): Promise<AgentResult<{ cached: string[] }>> {
     try {
-      const courses = await Convex.queries('courses:list', {});
+      const courses: any = await Convex.queries('courses:list', {});
       const cached: string[] = [];
+      const coursesArray = Array.isArray(courses) ? courses : [];
       
-      for (const course of (courses || [])) {
+      for (const course of coursesArray) {
         const result = await this.getCourseImages(course.slug, course.title);
         if (result.success && result.data && result.data.length > 0) {
           cached.push(course.slug);
