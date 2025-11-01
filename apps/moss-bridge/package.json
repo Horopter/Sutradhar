@@ -1,0 +1,19 @@
+{
+  "name": "moss-bridge",
+  "private": true,
+  "scripts": {
+    "dev": "node --watch ./src/server.js",
+    "build": "echo 'Using direct JS file'",
+    "start": "node ./src/server.js"
+  },
+  "dependencies": {
+    "@inferedge/moss": "^1.0.0-beta.1",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6"
+  }
+}
+

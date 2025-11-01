@@ -1,0 +1,14 @@
+{
+  "name": "sutradhar-convex",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy"
+  },
+  "dependencies": {
+    "convex": "^1.15.0",
+    "zod": "^3.23.8"
+  }
+}
+

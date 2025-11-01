@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Secrets - NEVER include in Docker images
+.secrets.env
+.secrets.*
+*.secrets
+!*.secrets.example
+!*.secrets.template
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (keep minimal)
+*.md
+!README.md
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+**/__tests__/
+**/tests/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Misc
+coverage/
+.nyc_output/
+*.map
+
+# Screenshots and temporary files
+screenshots/
+tmp/
+temp/
+
+# Replit
+.replit
+replit.nix
+
+# Empty directories
+backend-api/
+frontend/

@@ -1,0 +1,665 @@
+openapi: 3.0.3
+info:
+  title: Sutradhar RESTful Actions API
+  description: |
+    RESTful API endpoints for GitHub, Slack, and Google Calendar operations.
+    
+    All endpoints follow REST principles with resource-based URLs, proper HTTP methods,
+    and consistent response formats.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:2198/api/v1
+    description: Development server
+
+tags:
+  - name: GitHub
+    description: GitHub repository, issue, and PR operations
+  - name: Slack
+    description: Slack channel and message operations
+  - name: Calendar
+    description: Google Calendar and event operations
+
+paths:
+  # GitHub Endpoints
+  /github/repos/{repoSlug}:
+    get:
+      tags: [GitHub]
+      summary: Get repository information
+      parameters:
+        - name: repoSlug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Repository in format owner/repo
+      responses:
+        '200':
+          description: Repository information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+
+  /github/repos/{repoSlug}/issues:
+    get:
+      tags: [GitHub]
+      summary: List issues
+      parameters:
+        - name: repoSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: open
+        - name: label
+          in: query
+          schema:
+            type: string
+        - name: assignee
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of issues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      issues:
+                        type: array
+                        items:
+                          type: object
+                      count:
+                        type: integer
+
+    post:
+      tags: [GitHub]
+      summary: Create issue
+      parameters:
+        - name: repoSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                body:
+                  type: string
+                labels:
+                  type: array
+                  items:
+                    type: string
+                assignees:
+                  type: array
+                  items:
+                    type: string
+                sessionId:
+                  type: string
+      responses:
+        '201':
+          description: Issue created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+
+  /github/repos/{repoSlug}/issues/{issueNumber}:
+    get:
+      tags: [GitHub]
+      summary: Get issue
+      parameters:
+        - name: repoSlug
+          in: path
+          required: true
+        - name: issueNumber
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Issue details
+
+    patch:
+      tags: [GitHub]
+      summary: Update issue
+      parameters:
+        - name: repoSlug
+          in: path
+          required: true
+        - name: issueNumber
+          in: path
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                body:
+                  type: string
+                state:
+                  type: string
+                  enum: [open, closed]
+                labels:
+                  type: array
+                  items:
+                    type: string
+                assignees:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Issue updated
+
+  /github/repos/{repoSlug}/issues/{issueNumber}/comments:
+    post:
+      tags: [GitHub]
+      summary: Add comment to issue
+      parameters:
+        - name: repoSlug
+          in: path
+          required: true
+        - name: issueNumber
+          in: path
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - body
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                sessionId:
+                  type: string
+      responses:
+        '201':
+          description: Comment added
+
+  # Slack Endpoints
+  /slack/channels:
+    get:
+      tags: [Slack]
+      summary: List channels
+      parameters:
+        - name: types
+          in: query
+          schema:
+            type: string
+        - name: excludeArchived
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of channels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      channels:
+                        type: array
+                        items:
+                          type: object
+                      count:
+                        type: integer
+
+  /slack/channels/{channelId}:
+    get:
+      tags: [Slack]
+      summary: Get channel information
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Channel information
+
+  /slack/channels/{channelId}/messages:
+    get:
+      tags: [Slack]
+      summary: List messages in channel
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: oldest
+          in: query
+          schema:
+            type: string
+        - name: latest
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          type: object
+                      count:
+                        type: integer
+
+    post:
+      tags: [Slack]
+      summary: Send message to channel
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                threadTs:
+                  type: string
+                blocks:
+                  type: array
+                sessionId:
+                  type: string
+      responses:
+        '201':
+          description: Message sent
+
+  /slack/channels/{channelId}/messages/{ts}:
+    get:
+      tags: [Slack]
+      summary: Get message
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+        - name: ts
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Message details
+        '404':
+          description: Message not found
+
+    put:
+      tags: [Slack]
+      summary: Update message
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+        - name: ts
+          in: path
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                blocks:
+                  type: array
+      responses:
+        '200':
+          description: Message updated
+
+    delete:
+      tags: [Slack]
+      summary: Delete message
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+        - name: ts
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Message deleted
+
+  /slack/messages:
+    post:
+      tags: [Slack]
+      summary: Send message (alternative endpoint)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+                - channelId
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                channelId:
+                  type: string
+                sessionId:
+                  type: string
+      responses:
+        '201':
+          description: Message sent
+
+  # Calendar Endpoints
+  /calendar/calendars:
+    get:
+      tags: [Calendar]
+      summary: List calendars
+      responses:
+        '200':
+          description: List of calendars
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      calendars:
+                        type: array
+                        items:
+                          type: object
+                      count:
+                        type: integer
+
+  /calendar/calendars/{calendarId}:
+    get:
+      tags: [Calendar]
+      summary: Get calendar information
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Calendar information
+
+  /calendar/calendars/{calendarId}/events:
+    get:
+      tags: [Calendar]
+      summary: List events in calendar
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+        - name: timeMin
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: timeMax
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: maxResults
+          in: query
+          schema:
+            type: integer
+            default: 2500
+        - name: singleEvents
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+            enum: [startTime, updated]
+            default: startTime
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          type: object
+                      count:
+                        type: integer
+
+    post:
+      tags: [Calendar]
+      summary: Create event
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - startISO
+                - endISO
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                startISO:
+                  type: string
+                  format: date-time
+                endISO:
+                  type: string
+                  format: date-time
+                description:
+                  type: string
+                location:
+                  type: string
+                attendees:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                timezone:
+                  type: string
+                  default: UTC
+                sessionId:
+                  type: string
+      responses:
+        '201':
+          description: Event created
+
+  /calendar/calendars/{calendarId}/events/{eventId}:
+    get:
+      tags: [Calendar]
+      summary: Get event
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+        - name: eventId
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Event details
+
+    patch:
+      tags: [Calendar]
+      summary: Update event
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+        - name: eventId
+          in: path
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                startISO:
+                  type: string
+                  format: date-time
+                endISO:
+                  type: string
+                  format: date-time
+                description:
+                  type: string
+                location:
+                  type: string
+                attendees:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Event updated
+
+    delete:
+      tags: [Calendar]
+      summary: Delete event
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+        - name: eventId
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Event deleted
+
+  /calendar/events:
+    post:
+      tags: [Calendar]
+      summary: Create event (alternative endpoint)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - startISO
+                - endISO
+                - calendarId
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                startISO:
+                  type: string
+                  format: date-time
+                endISO:
+                  type: string
+                  format: date-time
+                calendarId:
+                  type: string
+                description:
+                  type: string
+                location:
+                  type: string
+                attendees:
+                  type: array
+                  items:
+                    type: string
+                sessionId:
+                  type: string
+      responses:
+        '201':
+          description: Event created
+

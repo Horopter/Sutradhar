@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: sutradhar-worker
+    ports:
+      - "${PORT:-2198}:2198"
+    environment:
+      - NODE_ENV=production
+      - PORT=2198
+      # Add your env vars here or use .env file
+      - CONVEX_URL=${CONVEX_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
+      - HYPERSPELL_API_KEY=${HYPERSPELL_API_KEY}
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - AGENTMAIL_API_KEY=${AGENTMAIL_API_KEY}
+      - COMPOSIO_API_KEY=${COMPOSIO_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ./seed:/app/seed:ro
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2198/health/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - sutradhar-network
+
+  convex:
+    image: node:20-slim
+    container_name: sutradhar-convex
+    working_dir: /app
+    command: sh -c "cd apps/convex && npm install && npx convex dev"
+    ports:
+      - "3210:3210"
+    volumes:
+      - ./apps/convex:/app/apps/convex
+    environment:
+      - NODE_ENV=development
+    networks:
+      - sutradhar-network
+    profiles:
+      - dev
+
+networks:
+  sutradhar-network:
+    driver: bridge
+

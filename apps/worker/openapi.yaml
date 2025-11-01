@@ -1,0 +1,414 @@
+openapi: 3.0.3
+info:
+  title: Sutradhar API
+  description: |
+    AI-powered assistant API with retrieval, actions, and LLM capabilities.
+    
+    ## API Versioning
+    This API is versioned. All v1 endpoints are prefixed with `/api/v1/`.
+    
+    ## Authentication
+    Currently OAuth endpoints return dummy tokens. Implement proper authentication for production.
+    
+    ## Rate Limiting
+    Different endpoints have different rate limits. Check response headers for rate limit information.
+  version: 1.0.0
+  contact:
+    name: Sutradhar API Support
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:2198
+    description: Development server
+  - url: https://api.sutradhar.example.com
+    description: Production server
+
+tags:
+  - name: Answer
+    description: Retrieval-augmented generation endpoints
+  - name: LLM
+    description: Direct LLM access endpoints
+  - name: Actions
+    description: External service integration (Slack, Calendar, GitHub, Forum)
+  - name: Email
+    description: Email sending via AgentMail
+  - name: Retrieval
+    description: Document indexing and search
+  - name: Voice
+    description: LiveKit voice integration
+  - name: Auth
+    description: OAuth authentication
+  - name: Health
+    description: Health check and diagnostics
+
+paths:
+  /:
+    get:
+      summary: API information
+      description: Returns API information and available endpoints
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  version:
+                    type: string
+                  description:
+                    type: string
+                  documentation:
+                    type: string
+                  endpoints:
+                    type: object
+
+  /api/v1:
+    get:
+      summary: API v1 information
+      description: Returns v1 API information and available endpoints
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API v1 information
+
+  /api/v1/docs:
+    get:
+      summary: OpenAPI documentation
+      description: Returns OpenAPI specification in YAML format
+      tags:
+        - Health
+      responses:
+        '200':
+          description: OpenAPI specification
+          content:
+            application/yaml:
+              schema:
+                type: string
+
+  /api/v1/answer:
+  /health/full:
+    get:
+      summary: Full health check
+      description: Returns comprehensive health status including all services and demo readiness
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  demo_ready:
+                    type: boolean
+                  blockers:
+                    type: array
+                    items:
+                      type: string
+                  services:
+                    type: object
+
+  /api/v1/answer:
+    post:
+      summary: Get AI answer with retrieval
+      description: |
+        Answers a question using retrieval-augmented generation.
+        Searches indexed documents, retrieves relevant context, and synthesizes an answer using LLM.
+      tags:
+        - Answer
+      operationId: answerQuestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+              properties:
+                sessionId:
+                  type: string
+                  default: demo-session
+                  description: Optional session ID for tracking conversation
+                question:
+                  type: string
+                  minLength: 1
+                  description: The question to answer
+                persona:
+                  type: string
+                  description: Optional persona for guardrail configuration
+      responses:
+        '200':
+          description: Answer response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  finalText:
+                    type: string
+                    description: The synthesized answer text
+                  citations:
+                    type: array
+                    description: Source citations from retrieved documents
+                    items:
+                      type: object
+                      properties:
+                        source:
+                          type: string
+                        text:
+                          type: string
+                        url:
+                          type: string
+                  latencyMs:
+                    type: number
+                    description: Response time in milliseconds
+                  blocked:
+                    type: boolean
+                    description: Whether the query was blocked by guardrails
+
+  /forum/post:
+    post:
+      summary: Post to forum
+      description: Creates a forum post (requires browser automation)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                url:
+                  type: string
+                  format: uri
+                username:
+                  type: string
+                password:
+                  type: string
+                text:
+                  type: string
+                  minLength: 1
+                sessionId:
+                  type: string
+      responses:
+        '200':
+          description: Forum post created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  mocked:
+                    type: boolean
+                  data:
+                    type: object
+
+  /actions/slack:
+    post:
+      summary: Send Slack message
+      description: Posts a message to Slack channel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                channelId:
+                  type: string
+                sessionId:
+                  type: string
+      responses:
+        '200':
+          description: Slack message sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  mocked:
+                    type: boolean
+
+  /actions/calendar:
+    post:
+      summary: Create calendar event
+      description: Creates a Google Calendar event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - startISO
+                - endISO
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                startISO:
+                  type: string
+                  format: date-time
+                endISO:
+                  type: string
+                  format: date-time
+                description:
+                  type: string
+                calendarId:
+                  type: string
+                sessionId:
+                  type: string
+      responses:
+        '200':
+          description: Calendar event created
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /actions/github:
+    post:
+      summary: Create GitHub issue
+      description: Creates a GitHub issue in the configured repository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                body:
+                  type: string
+                  default: ""
+                repoSlug:
+                  type: string
+                sessionId:
+                  type: string
+      responses:
+        '200':
+          description: GitHub issue created
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /llm/answer:
+    post:
+      summary: Get LLM answer
+      description: Gets a direct LLM response (with guardrails)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+              properties:
+                sessionId:
+                  type: string
+                question:
+                  type: string
+                  minLength: 1
+                provider:
+                  type: string
+                  enum:
+                    - openai
+                    - perplexity
+                model:
+                  type: string
+      responses:
+        '200':
+          description: LLM response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  text:
+                    type: string
+                  blocked:
+                    type: boolean
+
+  /llm/summarize:
+    post:
+      summary: Summarize text
+      description: Summarizes provided text using LLM
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - body
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+      responses:
+        '200':
+          description: Summarized text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  text:
+                    type: string
+
+  /llm/escalate:
+    post:
+      summary: Escalate query
+      description: Escalates a query for human review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - body
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+      responses:
+        '200':
+          description: Escalation response
+          content:
+            application/json:
+              schema:
+                type: object
+

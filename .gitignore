@@ -1,0 +1,82 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+*.tsbuildinfo
+build/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Secrets - NEVER commit these
+.secrets.env
+.secrets.*
+*.secrets
+!*.secrets.example
+!*.secrets.template
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+
+# Screenshots and temporary files
+screenshots/
+tmp/
+temp/
+*.png
+*.jpg
+*.jpeg
+
+# Replit
+.replit
+replit.nix
+
+# Empty directories
+backend-api/
+frontend/
+
+# Local development
+*.local
+.cache/
+
+# Misc
+*.pem
+*.key
+*.cert
+
