@@ -66,9 +66,13 @@ export const useApi = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        // Add timeout and retry for SSR
+        timeout: 5000,
+        retry: process.server ? 0 : 1, // Don't retry on server to avoid blocking
       })
       return response
     } catch (error: any) {
+      console.error(`API GET ${path} failed:`, error.message)
       return {
         ok: false,
         error: error.message || 'Request failed',
@@ -84,9 +88,13 @@ export const useApi = () => {
           'Content-Type': 'application/json',
         },
         body,
+        // Add timeout and retry for SSR
+        timeout: 5000,
+        retry: process.server ? 0 : 1, // Don't retry on server to avoid blocking
       })
       return response
     } catch (error: any) {
+      console.error(`API POST ${path} failed:`, error.message)
       return {
         ok: false,
         error: error.message || 'Request failed',
@@ -143,6 +151,10 @@ export const useApi = () => {
     },
     // Code endpoints
     code: {
+      list: (courseSlug?: string) => {
+        const query = courseSlug ? `?courseSlug=${encodeURIComponent(courseSlug)}` : ''
+        return get<{ assignments: CodeAssignment[] }>(`/code${query}`)
+      },
       get: (assignmentId: string) => get<{ assignment: CodeAssignment }>(`/code/${assignmentId}`),
       getHint: (assignmentId: string, code: string, failingTest?: string, sessionId?: string) =>
         post(`/code/${assignmentId}/hint`, { code, failingTest, sessionId }),

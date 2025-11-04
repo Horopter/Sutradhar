@@ -60,3 +60,12 @@ export const listByCourse = query({
   }
 });
 
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("codeAssignments")
+      .collect();
+  }
+});
+

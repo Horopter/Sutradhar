@@ -3,12 +3,20 @@
     <div class="container mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-8">
         <h1 class="text-4xl font-bold text-halloween-orange">📚 Course Catalog</h1>
-        <NuxtLink
-          to="/dashboard"
-          class="btn-secondary"
-        >
-          Dashboard
-        </NuxtLink>
+        <div class="flex gap-3">
+          <NuxtLink
+            to="/assignments"
+            class="btn-secondary"
+          >
+            💻 Coding Practice
+          </NuxtLink>
+          <NuxtLink
+            to="/dashboard"
+            class="btn-secondary"
+          >
+            Dashboard
+          </NuxtLink>
+        </div>
       </div>
 
       <div v-if="loading" class="text-center py-12">

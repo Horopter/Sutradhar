@@ -57,14 +57,13 @@
       </svg>
     </button>
     
-    <!-- User Question Bubble (shown while listening or until answer starts speaking) -->
+    <!-- User Question Bubble (shown while listening with transcript or after listening stops) -->
     <div 
-      v-if="userQuestion && (listening || (!answerTranscript && !speaking))"
-      class="absolute bottom-24 right-0 bg-halloween-card border border-halloween-orange/50 text-halloween-ghost px-4 py-3 rounded-lg shadow-xl shadow-halloween-orange/30 max-w-md mb-2"
+      v-if="(listening && (liveTranscript || interimTranscript)) || (userQuestion && !listening && !answerTranscript && !speaking)"
+      class="absolute bottom-24 right-0 bg-halloween-card border border-halloween-orange/50 text-halloween-ghost px-4 py-3 rounded-lg shadow-xl shadow-halloween-orange/30 max-w-md mb-2 max-h-64 flex flex-col"
     >
-      <div class="text-xs text-halloween-ghost/60 mb-1" v-if="listening">Listening... ({{ countdown }}s)</div>
-      <div class="text-xs text-halloween-ghost/60 mb-1" v-else>Your question:</div>
-      <div class="text-sm font-mono min-h-[2rem] text-halloween-ghost">
+      <div class="text-xs text-halloween-ghost/60 mb-1">Your question:</div>
+      <div class="text-sm font-mono text-halloween-ghost overflow-y-auto flex-1" style="max-height: 12rem; scrollbar-width: thin; scrollbar-color: rgba(255, 107, 53, 0.3) transparent; padding-right: 8px;">
         {{ listening ? (liveTranscript || interimTranscript || '...') : userQuestion }}
       </div>
       <div v-if="interimTranscript && listening && interimTranscript !== liveTranscript" class="text-xs text-halloween-ghost/50 italic mt-1">
@@ -72,24 +71,33 @@
       </div>
     </div>
     
+    <!-- Listening Toast (appears when listening starts, disappears after 2s) -->
+    <div 
+      v-if="showListeningToast"
+      class="absolute bottom-24 right-0 bg-halloween-card border border-halloween-orange/50 text-halloween-ghost px-4 py-2 rounded-lg shadow-lg shadow-halloween-orange/30 max-w-xs text-sm mb-2 animate-fade-in"
+    >
+      🎤 Listening... ({{ countdown }}s)
+    </div>
+    
+    <!-- Processing Toast (appears when processing starts, disappears after 2s) -->
+    <div 
+      v-if="showProcessingToast"
+      class="absolute bottom-24 right-0 bg-blue-900/30 border border-blue-500/50 text-blue-200 px-4 py-2 rounded-lg shadow-lg shadow-blue-500/30 max-w-xs text-sm mb-2 animate-fade-in"
+    >
+      ⚙️ Processing your question...
+    </div>
+    
     <!-- Answer Bubble (shown while speaking or until cleared) -->
     <div 
       v-if="answerTranscript && speaking"
-      class="absolute bottom-24 right-0 bg-green-900/30 border border-green-500/50 text-green-200 px-4 py-3 rounded-lg shadow-xl shadow-green-500/30 max-w-md mb-2"
+      class="absolute bottom-24 right-0 bg-green-900/30 border border-green-500/50 text-green-200 px-4 py-3 rounded-lg shadow-xl shadow-green-500/30 max-w-md mb-2 max-h-64 flex flex-col"
     >
       <div class="text-xs text-green-300/60 mb-1">Answering:</div>
-      <div class="text-sm font-mono min-h-[2rem] text-green-200">
+      <div class="text-sm font-mono text-green-200 overflow-y-auto flex-1" style="max-height: 12rem; scrollbar-width: thin; scrollbar-color: rgba(34, 197, 94, 0.3) transparent; padding-right: 8px;">
         {{ answerTranscript }}
       </div>
     </div>
     
-    <!-- Status Toast -->
-    <div 
-      v-if="statusMessage && !listening"
-      class="absolute bottom-20 right-0 bg-halloween-card border border-halloween-orange/50 text-halloween-ghost px-4 py-2 rounded-lg shadow-lg shadow-halloween-orange/30 max-w-xs text-sm mb-2"
-    >
-      {{ statusMessage }}
-    </div>
     
     <!-- Error Toast -->
     <div 
@@ -121,9 +129,13 @@ const liveTranscript = ref('')
 const interimTranscript = ref('')
 const userQuestion = ref('') // Store the user's question
 const answerTranscript = ref('') // Store the answer being spoken
+const showListeningToast = ref(false) // Toast for listening state
+const showProcessingToast = ref(false) // Toast for processing state
 const synth = ref<SpeechSynthesis | null>(null)
 const recognition = ref<SpeechRecognition | null>(null)
 let countdownInterval: ReturnType<typeof setInterval> | null = null
+let listeningToastTimeout: ReturnType<typeof setTimeout> | null = null
+let processingToastTimeout: ReturnType<typeof setTimeout> | null = null
 
 onMounted(() => {
   if (typeof window !== 'undefined') {
@@ -186,6 +198,11 @@ onMounted(() => {
 
 const stopListening = () => {
   listening.value = false
+  showListeningToast.value = false // Hide listening toast
+  if (listeningToastTimeout) {
+    clearTimeout(listeningToastTimeout)
+    listeningToastTimeout = null
+  }
   if (countdownInterval) {
     clearInterval(countdownInterval)
     countdownInterval = null
@@ -217,17 +234,34 @@ const startListening = () => {
   countdown.value = 10
   statusMessage.value = ''
   
+  // Show listening toast for 2 seconds
+  showListeningToast.value = true
+  if (listeningToastTimeout) {
+    clearTimeout(listeningToastTimeout)
+  }
+  listeningToastTimeout = setTimeout(() => {
+    showListeningToast.value = false
+  }, 2000)
+  
   // Start countdown
   countdownInterval = setInterval(() => {
     countdown.value--
     if (countdown.value <= 0) {
       const finalText = stopListening()
-      statusMessage.value = 'Processing your question...'
+      // Show processing toast for 2 seconds
+      showProcessingToast.value = true
+      if (processingToastTimeout) {
+        clearTimeout(processingToastTimeout)
+      }
+      processingToastTimeout = setTimeout(() => {
+        showProcessingToast.value = false
+      }, 2000)
+      
       if (finalText) {
         handleTranscript(finalText)
       } else {
         error.value = 'No speech detected. Please try again.'
-        statusMessage.value = ''
+        showProcessingToast.value = false
       }
     }
   }, 1000)
@@ -300,6 +334,7 @@ const handleTranscript = async (transcript: string) => {
           userQuestion.value = ''
           answerTranscript.value = ''
           statusMessage.value = ''
+          showProcessingToast.value = false
         }, 500) // Small delay for smooth transition
       }
       
@@ -311,14 +346,15 @@ const handleTranscript = async (transcript: string) => {
         setTimeout(() => {
           userQuestion.value = ''
           answerTranscript.value = ''
+          showProcessingToast.value = false
         }, 2000)
       }
       
       synth.value.speak(utterance)
     } else if (answerText) {
-      // No audio available, show in status message
-      statusMessage.value = answerText
+      // No audio available, show in answer bubble
       answerTranscript.value = answerText
+      showProcessingToast.value = false
       setTimeout(() => {
         userQuestion.value = ''
         answerTranscript.value = ''
@@ -329,6 +365,7 @@ const handleTranscript = async (transcript: string) => {
     loading.value = false
     error.value = err.message || 'Failed to process question'
     statusMessage.value = ''
+    showProcessingToast.value = false
   }
 }
 
@@ -344,6 +381,7 @@ const handleClick = () => {
       userQuestion.value = ''
       answerTranscript.value = ''
       statusMessage.value = ''
+      showProcessingToast.value = false
     }, 500)
     return
   }
@@ -351,9 +389,15 @@ const handleClick = () => {
   if (listening.value) {
     // Stop listening early if clicked again
     const finalText = stopListening()
-    statusMessage.value = ''
     if (finalText) {
-      statusMessage.value = 'Processing your question...'
+      // Show processing toast for 2 seconds
+      showProcessingToast.value = true
+      if (processingToastTimeout) {
+        clearTimeout(processingToastTimeout)
+      }
+      processingToastTimeout = setTimeout(() => {
+        showProcessingToast.value = false
+      }, 2000)
       handleTranscript(finalText)
     }
   } else {
@@ -361,6 +405,11 @@ const handleClick = () => {
     error.value = ''
     statusMessage.value = ''
     answerTranscript.value = '' // Clear previous answer
+    showProcessingToast.value = false // Clear any existing processing toast
+    if (processingToastTimeout) {
+      clearTimeout(processingToastTimeout)
+      processingToastTimeout = null
+    }
     startListening()
   }
 }
@@ -370,6 +419,12 @@ onUnmounted(() => {
   stopListening()
   if (synth.value) {
     synth.value.cancel()
+  }
+  if (listeningToastTimeout) {
+    clearTimeout(listeningToastTimeout)
+  }
+  if (processingToastTimeout) {
+    clearTimeout(processingToastTimeout)
   }
 })
 </script>

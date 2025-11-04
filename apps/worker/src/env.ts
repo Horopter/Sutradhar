@@ -8,12 +8,16 @@ dotenv.config();
 
 // Load secrets from .secrets.env file (if it exists)
 // This file should NEVER be committed to git
+// Check both the current directory and the project root (for monorepo setups)
 const secretsPath = path.resolve(process.cwd(), '.secrets.env');
-if (fs.existsSync(secretsPath)) {
-  dotenv.config({ path: secretsPath, override: false });
-  console.log('✅ Loaded secrets from .secrets.env');
+const rootSecretsPath = path.resolve(__dirname, '../../..', '.secrets.env');
+const secretsFile = fs.existsSync(secretsPath) ? secretsPath : (fs.existsSync(rootSecretsPath) ? rootSecretsPath : null);
+
+if (secretsFile) {
+  dotenv.config({ path: secretsFile, override: false });
+  console.log(`✅ Loaded secrets from ${secretsFile}`);
 } else {
-  console.warn('⚠️  .secrets.env file not found. Copy .secrets.example to .secrets.env and add your secrets.');
+  console.warn('⚠️  .secrets.env file not found in current directory or project root. Copy .secrets.example to .secrets.env and add your secrets.');
 }
 
 const envSchema = z.object({

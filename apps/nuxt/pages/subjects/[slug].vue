@@ -9,26 +9,34 @@
     </div>
 
     <div v-else>
-      <h1 class="text-4xl font-bold text-halloween-orange mb-8">{{ course?.title || slug }}</h1>
+      <h1 class="text-4xl font-bold text-halloween-orange mb-8">{{ course?.title || slug.charAt(0).toUpperCase() + slug.slice(1) }}</h1>
 
-      <div class="flex space-x-2 mb-8 border-b border-halloween-orange/30">
-        <button
-          v-for="tab in tabs"
-          :key="tab"
-          @click="activeTab = tab"
-          :class="activeTab === tab ? 'border-b-2 border-halloween-orange text-halloween-orange' : 'text-halloween-ghost/60'"
-          class="px-4 py-2 font-medium"
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex space-x-2 border-b border-halloween-orange/30">
+          <button
+            v-for="tab in tabs"
+            :key="tab"
+            @click="activeTab = tab"
+            :class="activeTab === tab ? 'border-b-2 border-halloween-orange text-halloween-orange' : 'text-halloween-ghost/60'"
+            class="px-4 py-2 font-medium"
+          >
+            {{ tab }}
+          </button>
+        </div>
+        <NuxtLink
+          :to="`/assignments/${slug}`"
+          class="btn-secondary flex items-center gap-2"
         >
-          {{ tab }}
-        </button>
+          💻 Coding Practice
+        </NuxtLink>
       </div>
 
       <!-- Lessons Tab -->
       <div v-if="activeTab === 'Lessons'" class="space-y-4">
         <div v-for="lesson in lessons" :key="lesson.id" class="card hover:scale-105 transition-transform">
-          <NuxtLink :to="`/lesson/${lesson.id}`" class="block">
+          <NuxtLink :to="`/lesson/${lesson.id}?courseSlug=${slug}`" class="block">
             <h2 class="text-xl font-bold text-halloween-orange mb-2">{{ lesson.title }}</h2>
-            <p class="text-halloween-ghost/70">{{ lesson.id }}</p>
+            <p v-if="lesson.description" class="text-halloween-ghost/70">{{ lesson.description }}</p>
           </NuxtLink>
         </div>
       </div>
@@ -77,6 +85,15 @@ const { get } = useApi()
 
 onMounted(async () => {
   try {
+    // Try to get course info from catalog
+    const catalogResult = await get<{ ok: boolean; courses: any[] }>('/catalog')
+    if (catalogResult.ok && catalogResult.courses) {
+      const foundCourse = catalogResult.courses.find((c: any) => c.slug === slug.value)
+      if (foundCourse) {
+        course.value = foundCourse
+      }
+    }
+    
     // Load lessons
     const lessonsResult = await get<{ ok: boolean; lessons: any[] }>(`/course/${slug.value}/lessons`)
     if (lessonsResult.ok) {

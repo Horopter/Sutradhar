@@ -118,9 +118,12 @@ export const useAuth = () => {
   const isAuthenticated = computed(() => user.value !== null)
   const isGuest = computed(() => user.value !== null && !user.value.email)
 
-  // Initialize guest session on client-side
+  // Initialize guest session on client-side only (not during SSR)
+  // Use nextTick to ensure it runs after component mount
   if (process.client) {
-    ensureGuestSession()
+    nextTick(() => {
+      ensureGuestSession()
+    })
   }
 
   return {

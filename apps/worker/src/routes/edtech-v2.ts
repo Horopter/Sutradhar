@@ -11,6 +11,7 @@ import { log } from '../log';
 import fetch from 'node-fetch';
 import { llmService } from '../core/services/llm-service';
 import { answerService } from '../core/services/answer-service';
+import { Convex } from '../convexClient';
 
 const router = Router();
 
@@ -728,6 +729,34 @@ router.post('/quiz/:id/attempt', rateLimiters.standard, validate({
 }));
 
 // ========== Code Assignment Routes ==========
+
+router.get('/code', rateLimiters.standard, asyncHandler(async (req: Request, res: Response) => {
+  const { courseSlug } = req.query;
+  
+  try {
+    let assignments: any[] = [];
+    
+    if (courseSlug && typeof courseSlug === 'string') {
+      // Filter by course
+      const result = await Convex.queries('codeAssignments:listByCourse', { courseSlug });
+      assignments = Array.isArray(result) ? result : [];
+    } else {
+      // Get all assignments
+      const result = await Convex.queries('codeAssignments:listAll', {});
+      assignments = Array.isArray(result) ? result : [];
+    }
+    
+    res.json({
+      ok: true,
+      assignments: assignments
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      ok: false,
+      error: error.message || 'Failed to list assignments'
+    });
+  }
+}));
 
 router.get('/code/:assignmentId', rateLimiters.standard, asyncHandler(async (req: Request, res: Response) => {
   const agent = agentRegistry.get('CodeAgent');

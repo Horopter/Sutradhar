@@ -18,17 +18,29 @@
       </div>
 
       <div v-else>
-        <h1 class="text-4xl font-bold mb-8 text-halloween-orange capitalize">{{ courseSlug }}</h1>
-        <div class="grid gap-4">
+        <div class="flex items-center justify-between mb-8">
+          <h1 class="text-4xl font-bold text-halloween-orange capitalize">{{ course?.title || courseSlug }}</h1>
           <NuxtLink
-            v-for="lesson in lessons"
-            :key="lesson.id"
-            :to="`/lesson/${lesson.id}?courseSlug=${courseSlug}`"
-            class="card hover:border-halloween-orange hover:shadow-halloween-orange/30"
+            :to="`/assignments/${courseSlug}`"
+            class="btn-secondary flex items-center gap-2"
           >
-            <h3 class="text-xl font-semibold mb-2 text-halloween-orange">{{ lesson.title }}</h3>
-            <p v-if="lesson.description" class="text-halloween-ghost/80">{{ lesson.description }}</p>
+            💻 Coding Practice
           </NuxtLink>
+        </div>
+        
+        <div class="mb-6">
+          <h2 class="text-2xl font-semibold mb-4 text-halloween-ghost">Lessons</h2>
+          <div class="grid gap-4">
+            <NuxtLink
+              v-for="lesson in lessons"
+              :key="lesson.id"
+              :to="`/lesson/${lesson.id}?courseSlug=${courseSlug}`"
+              class="card hover:border-halloween-orange hover:shadow-halloween-orange/30"
+            >
+              <h3 class="text-xl font-semibold mb-2 text-halloween-orange">{{ lesson.title }}</h3>
+              <p v-if="lesson.description" class="text-halloween-ghost/80">{{ lesson.description }}</p>
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </div>
@@ -45,12 +57,28 @@ const api = useApi()
 const { sessionId } = useAuth()
 
 const courseSlug = route.params.slug as string
+const course = ref<any>(null) // Store course info if available
 const lessons = ref<any[]>([])
 const loading = ref(true)
 const error = ref('')
 
 onMounted(async () => {
   loading.value = true
+  
+  // Try to get course info from catalog
+  try {
+    const catalogResponse = await api.catalog.list()
+    if (catalogResponse.ok && catalogResponse.courses) {
+      const foundCourse = catalogResponse.courses.find((c: any) => c.slug === courseSlug)
+      if (foundCourse) {
+        course.value = foundCourse
+      }
+    }
+  } catch (e) {
+    // Non-fatal - just use slug if course not found
+  }
+  
+  // Get lessons
   const response = await api.catalog.getLessons(courseSlug)
   if (response.ok && response.lessons) {
     lessons.value = response.lessons
