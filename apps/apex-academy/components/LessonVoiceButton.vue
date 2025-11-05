@@ -1,16 +1,17 @@
 <template>
-  <div class="fixed bottom-6 right-6 z-50">
+  <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
     <button
       @click="handleClick"
       :disabled="loading || speaking"
       :class="[
-        'w-16 h-16 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center',
+        'w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center touch-manipulation active:scale-95',
         listening ? 'bg-red-500 hover:bg-red-600 animate-pulse' :
         speaking ? 'bg-green-500 hover:bg-green-600 animate-pulse' : 
         loading ? 'bg-blue-500 hover:bg-blue-600 cursor-wait' :
-        'bg-halloween-orange hover:bg-halloween-pumpkin hover:scale-110 shadow-halloween-orange/50',
-        'focus:outline-none focus:ring-4 focus:ring-halloween-orange/50'
+        'hover:scale-110',
+        'focus:outline-none focus:ring-4'
       ]"
+      :style="!listening && !speaking && !loading ? { backgroundColor: 'var(--theme-primary)', '--tw-ring-color': 'color-mix(in srgb, var(--theme-primary) 50%, transparent)' } : {}"
       :title="listening ? `Listening... (${countdown}s)` : speaking ? 'Speaking...' : loading ? 'Processing...' : 'Ask a question (10s)'"
     >
       <!-- Microphone Icon -->
@@ -60,13 +61,14 @@
     <!-- User Question Bubble (shown while listening with transcript or after listening stops) -->
     <div 
       v-if="(listening && (liveTranscript || interimTranscript)) || (userQuestion && !listening && !answerTranscript && !speaking)"
-      class="absolute bottom-24 right-0 bg-halloween-card border border-halloween-orange/50 text-halloween-ghost px-4 py-3 rounded-lg shadow-xl shadow-halloween-orange/30 max-w-md mb-2 max-h-64 flex flex-col"
+      class="absolute bottom-20 sm:bottom-24 right-0 sm:right-0 left-0 sm:left-auto px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-xl max-w-[calc(100vw-2rem)] sm:max-w-md mb-2 max-h-48 sm:max-h-64 flex flex-col"
+      style="background-color: var(--theme-card); border: 1px solid color-mix(in srgb, var(--theme-primary) 50%, transparent); color: var(--theme-text);"
     >
-      <div class="text-xs text-halloween-ghost/60 mb-1">Your question:</div>
-      <div class="text-sm font-mono text-halloween-ghost overflow-y-auto flex-1" style="max-height: 12rem; scrollbar-width: thin; scrollbar-color: rgba(255, 107, 53, 0.3) transparent; padding-right: 8px;">
+      <div class="text-xs mb-1" style="color: var(--theme-text-secondary); opacity: 0.7;">Your question:</div>
+      <div class="text-xs sm:text-sm font-mono overflow-y-auto flex-1" style="max-height: 10rem; sm:max-height: 12rem; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--theme-primary) 30%, transparent) transparent; padding-right: 8px; color: var(--theme-text);">
         {{ listening ? (liveTranscript || interimTranscript || '...') : userQuestion }}
       </div>
-      <div v-if="interimTranscript && listening && interimTranscript !== liveTranscript" class="text-xs text-halloween-ghost/50 italic mt-1">
+      <div v-if="interimTranscript && listening && interimTranscript !== liveTranscript" class="text-xs italic mt-1" style="color: var(--theme-text-secondary); opacity: 0.6;">
         {{ interimTranscript }}
       </div>
     </div>
@@ -74,7 +76,8 @@
     <!-- Listening Toast (appears when listening starts, disappears after 2s) -->
     <div 
       v-if="showListeningToast"
-      class="absolute bottom-24 right-0 bg-halloween-card border border-halloween-orange/50 text-halloween-ghost px-4 py-2 rounded-lg shadow-lg shadow-halloween-orange/30 max-w-xs text-sm mb-2 animate-fade-in"
+      class="absolute bottom-20 sm:bottom-24 right-0 sm:right-0 left-0 sm:left-auto px-3 sm:px-4 py-2 rounded-lg shadow-lg max-w-[calc(100vw-2rem)] sm:max-w-xs text-xs sm:text-sm mb-2 animate-fade-in"
+      style="background-color: var(--theme-card); border: 1px solid color-mix(in srgb, var(--theme-primary) 50%, transparent); color: var(--theme-text);"
     >
       🎤 Listening... ({{ countdown }}s)
     </div>
@@ -82,7 +85,7 @@
     <!-- Processing Toast (appears when processing starts, disappears after 2s) -->
     <div 
       v-if="showProcessingToast"
-      class="absolute bottom-24 right-0 bg-blue-900/30 border border-blue-500/50 text-blue-200 px-4 py-2 rounded-lg shadow-lg shadow-blue-500/30 max-w-xs text-sm mb-2 animate-fade-in"
+      class="absolute bottom-20 sm:bottom-24 right-0 sm:right-0 left-0 sm:left-auto bg-blue-900/30 border border-blue-500/50 text-blue-200 px-3 sm:px-4 py-2 rounded-lg shadow-lg shadow-blue-500/30 max-w-[calc(100vw-2rem)] sm:max-w-xs text-xs sm:text-sm mb-2 animate-fade-in"
     >
       ⚙️ Processing your question...
     </div>
@@ -90,10 +93,10 @@
     <!-- Answer Bubble (shown while speaking or until cleared) -->
     <div 
       v-if="answerTranscript && speaking"
-      class="absolute bottom-24 right-0 bg-green-900/30 border border-green-500/50 text-green-200 px-4 py-3 rounded-lg shadow-xl shadow-green-500/30 max-w-md mb-2 max-h-64 flex flex-col"
+      class="absolute bottom-20 sm:bottom-24 right-0 sm:right-0 left-0 sm:left-auto bg-green-900/30 border border-green-500/50 text-green-200 px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-xl shadow-green-500/30 max-w-[calc(100vw-2rem)] sm:max-w-md mb-2 max-h-48 sm:max-h-64 flex flex-col"
     >
       <div class="text-xs text-green-300/60 mb-1">Answering:</div>
-      <div class="text-sm font-mono text-green-200 overflow-y-auto flex-1" style="max-height: 12rem; scrollbar-width: thin; scrollbar-color: rgba(34, 197, 94, 0.3) transparent; padding-right: 8px;">
+      <div class="text-xs sm:text-sm font-mono text-green-200 overflow-y-auto flex-1" style="max-height: 10rem; sm:max-height: 12rem; scrollbar-width: thin; scrollbar-color: rgba(34, 197, 94, 0.3) transparent; padding-right: 8px;">
         {{ answerTranscript }}
       </div>
     </div>

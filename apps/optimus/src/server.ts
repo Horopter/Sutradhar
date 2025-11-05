@@ -11,8 +11,8 @@ import morgan from 'morgan';
 import { SutradharClient } from './client/sutradhar-client';
 
 const app = express();
-const PORT = process.env.PORT || 4001;
-const SUTRADHAR_URL = process.env.SUTRADHAR_URL || 'http://localhost:5000';
+const PORT = 3888; // Hardcoded port for Optimus
+const SUTRADHAR_URL = 'http://localhost:3999'; // Hardcoded Sutradhar URL
 
 // Initialize Sutradhar client
 const sutradharClient = new SutradharClient(SUTRADHAR_URL);

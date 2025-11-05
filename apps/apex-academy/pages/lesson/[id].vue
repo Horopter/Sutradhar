@@ -1,23 +1,23 @@
 <template>
-  <div class="min-h-screen bg-halloween-bg">
+  <div class="min-h-screen" style="background-color: var(--theme-bg);">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
-      <NuxtLink :to="courseSlug ? `/course/${courseSlug}` : '/catalog'" class="text-halloween-orange hover:text-halloween-pumpkin hover:underline mb-4 inline-block flex items-center gap-2">
+      <NuxtLink :to="courseSlug ? `/course/${courseSlug}` : '/catalog'" class="mb-4 inline-block flex items-center gap-2 hover:underline" style="color: var(--theme-primary);">
         <span>←</span> Back
       </NuxtLink>
 
       <div v-if="loading" class="text-center py-12">
-        <div class="text-lg text-halloween-ghost/60">Loading lesson...</div>
+        <div class="text-lg" style="color: var(--theme-text-secondary);">Loading lesson...</div>
       </div>
 
-      <div v-else-if="error" class="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-red-300">
+      <div v-else-if="error" class="rounded-xl border border-red-500/30 p-4" style="background-color: rgba(239, 68, 68, 0.1); color: #dc2626;">
         {{ error }}
       </div>
 
       <div v-else-if="lesson" class="card">
-        <h1 class="text-4xl font-bold mb-4 text-halloween-orange">{{ lesson.title }}</h1>
-        <div v-if="lesson.description" class="text-xl text-halloween-ghost/80 mb-6">{{ lesson.description }}</div>
-        <div v-if="lesson.content" class="prose prose-invert max-w-none prose-headings:text-halloween-orange prose-a:text-halloween-pumpkin prose-strong:text-halloween-orange prose-code:text-halloween-lime" v-html="lesson.content"></div>
-        <div v-else class="text-halloween-ghost/60">No content available</div>
+        <h1 class="text-4xl font-bold mb-4" style="color: var(--theme-primary);">{{ lesson.title }}</h1>
+        <div v-if="lesson.description" class="text-xl mb-6" style="color: var(--theme-text-secondary);">{{ lesson.description }}</div>
+        <div v-if="lesson.content" class="prose max-w-none" :style="{ '--prose-headings': 'var(--theme-primary)', '--prose-links': 'var(--theme-primary)', '--prose-strong': 'var(--theme-primary)', color: 'var(--theme-text)' }" v-html="lesson.content"></div>
+        <div v-else style="color: var(--theme-text-secondary);">No content available</div>
       </div>
       
       <!-- Floating Voice Assistant Button -->

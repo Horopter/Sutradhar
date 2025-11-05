@@ -3,16 +3,20 @@
     <div
       v-for="notification in notifications"
       :key="notification.id"
-      :class="notification.type === 'success' ? 'bg-green-500/20 border-green-500' : notification.type === 'error' ? 'bg-red-500/20 border-red-500' : 'bg-halloween-orange/20 border-halloween-orange'"
       class="px-4 py-3 rounded-lg border shadow-lg min-w-[300px]"
+      :style="notification.type === 'success' 
+        ? { backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: '#16a34a', color: '#16a34a' }
+        : notification.type === 'error'
+        ? { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#dc2626', color: '#dc2626' }
+        : { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 20%, transparent)', borderColor: 'var(--theme-primary)', color: 'var(--theme-text)' }"
     >
-      <p class="text-halloween-ghost">{{ notification.message }}</p>
+      <p>{{ notification.message }}</p>
     </div>
   </div>
 </template>
 
-<script setup>
-const notifications = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>>('notifications', () => [])
+<script setup lang="ts">
+  const notifications = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>>('notifications', () => [])
 
 // Auto-remove notifications after 5 seconds
 watch(notifications, (newVal) => {

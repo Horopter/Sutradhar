@@ -1,43 +1,51 @@
 <template>
-  <div class="min-h-screen bg-halloween-bg">
+  <div class="min-h-screen" style="background-color: var(--theme-bg);">
     <div class="container mx-auto px-4 py-8 max-w-3xl">
-      <NuxtLink to="/catalog" class="text-halloween-orange hover:text-halloween-pumpkin hover:underline mb-4 inline-block flex items-center gap-2">
+      <NuxtLink to="/catalog" class="mb-4 inline-block flex items-center gap-2 hover:underline" style="color: var(--theme-primary);">
         <span>←</span> Back to Catalog
       </NuxtLink>
 
       <div v-if="loading" class="text-center py-12">
-        <div class="text-lg text-halloween-ghost/60">Loading quiz...</div>
+        <div class="text-lg" style="color: var(--theme-text-secondary);">Loading quiz...</div>
       </div>
 
-      <div v-else-if="error" class="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-red-300">
+      <div v-else-if="error" class="rounded-xl border border-red-500/30 p-4" style="background-color: rgba(239, 68, 68, 0.1); color: #dc2626;">
         {{ error }}
       </div>
 
       <div v-else-if="quiz">
         <div class="card">
-          <h1 class="text-3xl font-bold mb-6 text-halloween-orange">{{ quiz.title }}</h1>
+          <h1 class="text-3xl font-bold mb-6" style="color: var(--theme-primary);">{{ quiz.title }}</h1>
 
           <form @submit.prevent="handleSubmit" class="space-y-8">
             <div
               v-for="(question, index) in quiz.questions"
               :key="question.id"
-              class="border-b border-halloween-orange/20 pb-6 last:border-0"
+              class="border-b pb-6 last:border-0"
+              style="border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);"
             >
-              <h3 class="text-lg font-semibold mb-4 text-halloween-ghost">{{ index + 1 }}. {{ question.question }}</h3>
+              <h3 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">{{ index + 1 }}. {{ question.question }}</h3>
               <div class="space-y-2">
                 <label
                   v-for="(option, optIndex) in question.options"
                   :key="optIndex"
-                  class="flex items-center p-3 border border-halloween-orange/30 rounded-lg hover:bg-halloween-dark hover:border-halloween-orange/50 cursor-pointer transition"
+                  class="flex items-center p-3 border rounded-lg cursor-pointer transition"
+                  :style="{
+                    borderColor: 'color-mix(in srgb, var(--theme-primary) 30%, transparent)',
+                    backgroundColor: 'transparent'
+                  }"
+                  @mouseenter="$event.currentTarget.style.backgroundColor = 'var(--theme-dark)'"
+                  @mouseleave="$event.currentTarget.style.backgroundColor = 'transparent'"
                 >
                   <input
                     type="radio"
                     :name="`question-${question.id}`"
                     :value="optIndex"
                     v-model="answers[question.id]"
-                    class="mr-3 accent-halloween-orange"
+                    class="mr-3"
+                    style="accent-color: var(--theme-primary);"
                   />
-                  <span class="text-halloween-ghost">{{ option }}</span>
+                  <span style="color: var(--theme-text);">{{ option }}</span>
                 </label>
               </div>
             </div>

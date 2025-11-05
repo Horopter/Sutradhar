@@ -39,3 +39,32 @@ export const getByAssignment = query({
   }
 });
 
+export const get = query({
+  args: { submissionId: v.id("codeSubmissions") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.submissionId);
+  }
+});
+
+export const getByUserCourse = query({
+  args: {
+    userId: v.string(),
+    courseSlug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const submissions = await ctx.db
+      .query("codeSubmissions")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    
+    // Filter by course by checking assignment's courseSlug
+    const assignments = await ctx.db
+      .query("codeAssignments")
+      .withIndex("by_course", (q) => q.eq("courseSlug", args.courseSlug))
+      .collect();
+    
+    const assignmentIds = new Set(assignments.map(a => a.assignmentId));
+    return submissions.filter(s => assignmentIds.has(s.assignmentId));
+  }
+});
+

@@ -5,12 +5,12 @@
       <slot />
     </main>
     <Footer />
-    <SummonSutradhar />
+    <AIAssistant />
     <Notifications />
   </div>
 </template>
 
 <script setup>
-// Nuxt auto-imports components, but explicit imports work too
+// Nuxt auto-imports components from the components directory
 </script>
 

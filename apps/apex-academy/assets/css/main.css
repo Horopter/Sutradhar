@@ -2,15 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for theming - default to premium light mode */
+:root {
+  --theme-bg: #fafbfc;
+  --theme-dark: #f1f3f5;
+  --theme-card: #ffffff;
+  --theme-primary: #6366f1;
+  --theme-secondary: #8b5cf6;
+  --theme-accent: #f59e0b;
+  --theme-text: #0f172a;
+  --theme-text-secondary: #64748b;
+  --theme-border: #e2e8f0;
+  --theme-shadow: rgba(15, 23, 42, 0.08);
+}
+
 @layer base {
+  /* Force our theme system, ignore system preferences */
+  html {
+    background-color: var(--theme-bg) !important;
+    color-scheme: light !important; /* Will be updated by theme system */
+    min-height: 100%;
+  }
+  
   body {
-    @apply bg-halloween-bg text-halloween-ghost;
+    background-color: var(--theme-bg) !important;
+    color: var(--theme-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-feature-settings: 'rlig' 1, 'calt' 1; /* Better typography */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100%;
+  }
+  
+  #__nuxt {
+    background-color: var(--theme-bg) !important;
+    min-height: 100%;
+  }
+  
+  /* Override any system preference media queries */
+  @media (prefers-color-scheme: dark) {
+    html {
+      color-scheme: light !important; /* Force light, ignore system dark mode */
+    }
+  }
+  
+  @media (prefers-color-scheme: light) {
+    html {
+      color-scheme: light !important;
+    }
   }
   
   /* Custom scrollbar styles */
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 107, 53, 0.3) transparent;
+    scrollbar-color: var(--theme-primary);
+    scrollbar-color: color-mix(in srgb, var(--theme-primary) 30%, transparent);
   }
   
   *::-webkit-scrollbar {
@@ -23,12 +69,12 @@
   }
   
   *::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 107, 53, 0.3);
+    background-color: color-mix(in srgb, var(--theme-primary) 30%, transparent);
     border-radius: 4px;
   }
   
   *::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 107, 53, 0.5);
+    background-color: color-mix(in srgb, var(--theme-primary) 50%, transparent);
   }
   
   /* Fade-in animation for toasts */
@@ -49,20 +95,138 @@
 }
 
 @layer components {
+  /* Premium Primary Button - Modern gradient with depth */
   .btn-primary {
-    @apply px-6 py-3 bg-halloween-orange text-black font-bold rounded-lg hover:bg-halloween-pumpkin transition-all duration-300 hover:shadow-lg hover:shadow-halloween-orange/50;
+    @apply px-4 sm:px-6 py-2.5 sm:py-3 font-semibold rounded-xl transition-all duration-300 relative overflow-hidden text-sm sm:text-base;
+    background: linear-gradient(135deg, var(--theme-primary) 0%, color-mix(in srgb, var(--theme-primary) 80%, var(--theme-secondary)) 100%);
+    color: white;
+    box-shadow: 0 4px 14px 0 color-mix(in srgb, var(--theme-primary) 25%, transparent),
+                0 2px 4px 0 color-mix(in srgb, var(--theme-primary) 15%, transparent);
+    min-height: 44px; /* Minimum touch target size */
+    touch-action: manipulation; /* Prevent double-tap zoom on mobile */
   }
   
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px 0 color-mix(in srgb, var(--theme-primary) 35%, transparent),
+                0 4px 6px 0 color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  }
+  
+  .btn-primary:hover::before {
+    opacity: 1;
+  }
+  
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+  
+  /* Premium Secondary Button - Subtle with modern border */
   .btn-secondary {
-    @apply px-6 py-3 bg-halloween-card text-halloween-ghost font-bold rounded-lg border border-halloween-orange/30 hover:border-halloween-orange transition-all duration-300;
+    @apply px-4 sm:px-6 py-2.5 sm:py-3 font-semibold rounded-xl border transition-all duration-300 relative text-sm sm:text-base;
+    background-color: var(--theme-card);
+    color: var(--theme-text);
+    border-color: var(--theme-border);
+    box-shadow: 0 1px 2px 0 var(--theme-shadow);
+    min-height: 44px; /* Minimum touch target size */
+    touch-action: manipulation; /* Prevent double-tap zoom on mobile */
   }
   
+  .btn-secondary:hover {
+    background-color: var(--theme-dark);
+    border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px 0 color-mix(in srgb, var(--theme-primary) 10%, transparent);
+  }
+  
+  .btn-secondary:active {
+    transform: translateY(0);
+  }
+  
+  /* Premium Card - Glassmorphism-inspired with depth */
   .card {
-    @apply bg-halloween-card border border-halloween-orange/20 rounded-xl p-6 shadow-lg hover:shadow-halloween-orange/20 transition-all duration-300;
+    @apply rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-300 relative;
+    background-color: var(--theme-card);
+    border: 1px solid var(--theme-border);
+    box-shadow: 0 1px 3px 0 var(--theme-shadow),
+                0 1px 2px -1px var(--theme-shadow);
+    backdrop-filter: blur(10px);
   }
   
+  /* Touch-friendly interactive elements */
+  @media (max-width: 768px) {
+    button, a, input, select, textarea {
+      touch-action: manipulation;
+    }
+    
+    /* Larger tap targets on mobile */
+    button, a.btn-primary, a.btn-secondary {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+  
+  /* Responsive typography */
+  @media (max-width: 640px) {
+    h1 {
+      @apply text-3xl sm:text-4xl;
+    }
+    
+    h2 {
+      @apply text-xl sm:text-2xl;
+    }
+    
+    h3 {
+      @apply text-lg sm:text-xl;
+    }
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px color-mix(in srgb, var(--theme-primary) 15%, transparent),
+                0 4px 6px -4px color-mix(in srgb, var(--theme-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--theme-primary) 30%, transparent);
+  }
+  
+  /* Premium Input Field - Modern with focus states */
   .input-field {
-    @apply w-full px-4 py-3 bg-halloween-dark border border-halloween-orange/30 rounded-lg text-halloween-ghost placeholder-gray-500 focus:outline-none focus:border-halloween-orange focus:ring-2 focus:ring-halloween-orange/50;
+    @apply w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-300 placeholder:opacity-60 focus:outline-none focus:ring-2 text-sm sm:text-base;
+    background-color: var(--theme-card);
+    color: var(--theme-text);
+    border: 1.5px solid var(--theme-border);
+    box-shadow: 0 1px 2px 0 var(--theme-shadow);
+    min-height: 44px; /* Minimum touch target size */
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  /* Prevent zoom on input focus in iOS */
+  @media screen and (max-width: 768px) {
+    .input-field {
+      font-size: 16px !important;
+    }
+  }
+  
+  .input-field:focus {
+    border-color: var(--theme-primary);
+    ring-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 10%, transparent),
+                0 1px 2px 0 var(--theme-shadow);
+    background-color: var(--theme-card);
+  }
+  
+  .input-field:hover {
+    border-color: color-mix(in srgb, var(--theme-primary) 50%, transparent);
   }
 }
 

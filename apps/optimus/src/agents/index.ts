@@ -71,4 +71,10 @@ export { ProgressAgent } from './progress-agent';
 export { ImageAgent } from './image-agent';
 export { StudyPlanAgent } from './study-plan-agent';
 export { NotificationAgent } from './notification-agent';
+export { AdaptiveLearningAgent } from './adaptive-learning-agent';
+export { AnalyticsAgent } from './analytics-agent';
+export { GamificationAgent } from './gamification-agent';
+export { ContentGenerationAgent } from './content-generation-agent';
+export { SocialAgent } from './social-agent';
+export { AssessmentAgent } from './assessment-agent';
 

@@ -2,41 +2,48 @@
   <div>
     <button
       @click="isOpen = !isOpen"
-      class="fixed bottom-6 right-6 w-16 h-16 bg-halloween-orange rounded-full shadow-lg hover:shadow-halloween-orange/50 transition-all duration-300 hover:scale-110 flex items-center justify-center text-2xl z-40 animate-pulse-slow"
-      title="Summon Sutradhar"
+      class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 flex items-center justify-center text-xl sm:text-2xl z-40 animate-pulse-slow touch-manipulation"
+      style="background-color: var(--theme-primary);"
+      title="AI Assistant"
     >
       🎃
     </button>
 
     <div
       v-if="isOpen"
-      class="fixed bottom-24 right-6 w-96 bg-halloween-card border border-halloween-orange/30 rounded-xl shadow-2xl z-50 p-6"
+      class="fixed bottom-20 sm:bottom-24 right-2 sm:right-6 left-2 sm:left-auto w-auto sm:w-96 max-w-[calc(100vw-1rem)] sm:max-w-none rounded-xl shadow-2xl z-50 p-4 sm:p-6"
+      style="background-color: var(--theme-card); border: 1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent);"
     >
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold text-halloween-orange">Sutradhar Assistant</h3>
-        <button @click="isOpen = false" class="text-halloween-ghost/60 hover:text-halloween-ghost">
+        <h3 class="text-lg sm:text-xl font-bold" style="color: var(--theme-primary);">AI Assistant</h3>
+        <button @click="isOpen = false" style="color: var(--theme-text-secondary);" class="hover:opacity-80 p-1 touch-manipulation" aria-label="Close">
           ✕
         </button>
       </div>
 
-      <div class="space-y-4">
-        <div class="max-h-64 overflow-y-auto space-y-2 mb-4">
+      <div class="space-y-3 sm:space-y-4">
+        <div class="max-h-48 sm:max-h-64 overflow-y-auto space-y-2 mb-3 sm:mb-4">
           <div v-for="msg in messages" :key="msg.id" :class="msg.from === 'user' ? 'text-right' : 'text-left'">
-            <div :class="msg.from === 'user' ? 'bg-halloween-orange/20' : 'bg-halloween-dark'" class="p-2 rounded-lg inline-block max-w-[80%]">
+            <div 
+              class="p-2 sm:p-3 rounded-lg inline-block max-w-[85%] sm:max-w-[80%] text-sm sm:text-base break-words"
+              :style="msg.from === 'user' 
+                ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 20%, transparent)', color: 'var(--theme-text)' }
+                : { backgroundColor: 'var(--theme-dark)', color: 'var(--theme-text)' }"
+            >
               {{ msg.text }}
             </div>
           </div>
         </div>
 
-        <div class="flex space-x-2">
+        <div class="flex flex-col sm:flex-row gap-2 sm:space-x-2">
           <input
             v-model="question"
             @keyup.enter="askQuestion"
             type="text"
             placeholder="Ask a question..."
-            class="flex-1 input-field"
+            class="flex-1 input-field text-sm sm:text-base"
           />
-          <button @click="askQuestion" :disabled="loading || !question.trim()" class="btn-primary">
+          <button @click="askQuestion" :disabled="loading || !question.trim()" class="btn-primary w-full sm:w-auto text-sm sm:text-base py-2.5 sm:py-3 touch-manipulation">
             {{ loading ? '...' : 'Ask' }}
           </button>
         </div>
@@ -45,7 +52,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const isOpen = ref(false)
 const question = ref('')
 const messages = ref<Array<{ id: string; from: 'user' | 'agent'; text: string }>>([])

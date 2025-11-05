@@ -48,3 +48,53 @@ export const getByType = query({
   }
 });
 
+export const getRecent = query({
+  args: {
+    userId: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .take(args.limit || 20);
+  }
+});
+
+export const create = mutation({
+  args: {
+    userId: v.string(),
+    type: v.string(),
+    payload: v.optional(v.any()),
+    timestamp: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("events", {
+      userId: args.userId,
+      type: args.type,
+      payload: args.payload || {},
+      ts: args.timestamp || Date.now()
+    });
+  }
+});
+
+export const getByUserCourse = query({
+  args: {
+    userId: v.string(),
+    courseSlug: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .take(args.limit || 50);
+    
+    return events.filter((e: any) => 
+      e.payload?.courseSlug === args.courseSlug
+    );
+  }
+});
+

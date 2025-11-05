@@ -1,24 +1,26 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen bg-halloween-bg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen" style="background-color: var(--theme-bg);">
     <div v-if="loading" class="text-center py-12">
-      <p class="text-halloween-ghost/60">Loading...</p>
+      <p style="color: var(--theme-text-secondary);">Loading...</p>
     </div>
 
-    <div v-else-if="error" class="card bg-red-500/20 border-red-500">
-      <p class="text-red-400">{{ error }}</p>
+    <div v-else-if="error" class="card rounded-xl border border-red-500/30" style="background-color: rgba(239, 68, 68, 0.1); color: #dc2626;">
+      <p>{{ error }}</p>
     </div>
 
     <div v-else>
-      <h1 class="text-4xl font-bold text-halloween-orange mb-8">{{ course?.title || slug.charAt(0).toUpperCase() + slug.slice(1) }}</h1>
+      <h1 class="text-4xl font-bold mb-8" style="color: var(--theme-primary);">{{ course?.title || slug.charAt(0).toUpperCase() + slug.slice(1) }}</h1>
 
       <div class="flex items-center justify-between mb-8">
-        <div class="flex space-x-2 border-b border-halloween-orange/30">
+        <div class="flex space-x-2 border-b" style="border-color: color-mix(in srgb, var(--theme-primary) 30%, transparent);">
           <button
             v-for="tab in tabs"
             :key="tab"
             @click="activeTab = tab"
-            :class="activeTab === tab ? 'border-b-2 border-halloween-orange text-halloween-orange' : 'text-halloween-ghost/60'"
-            class="px-4 py-2 font-medium"
+            class="px-4 py-2 font-medium transition-colors"
+            :style="activeTab === tab 
+              ? { borderBottom: '2px solid var(--theme-primary)', color: 'var(--theme-primary)' }
+              : { color: 'var(--theme-text-secondary)' }"
           >
             {{ tab }}
           </button>
@@ -35,18 +37,18 @@
       <div v-if="activeTab === 'Lessons'" class="space-y-4">
         <div v-for="lesson in lessons" :key="lesson.id" class="card hover:scale-105 transition-transform">
           <NuxtLink :to="`/lesson/${lesson.id}?courseSlug=${slug}`" class="block">
-            <h2 class="text-xl font-bold text-halloween-orange mb-2">{{ lesson.title }}</h2>
-            <p v-if="lesson.description" class="text-halloween-ghost/70">{{ lesson.description }}</p>
+            <h2 class="text-xl font-bold mb-2" style="color: var(--theme-primary);">{{ lesson.title }}</h2>
+            <p v-if="lesson.description" style="color: var(--theme-text-secondary);">{{ lesson.description }}</p>
           </NuxtLink>
         </div>
       </div>
 
       <!-- Quizzes Tab -->
       <div v-if="activeTab === 'Quizzes'" class="space-y-4">
-        <p v-if="quizzes.length === 0" class="text-halloween-ghost/60">No quizzes available yet.</p>
+        <p v-if="quizzes.length === 0" style="color: var(--theme-text-secondary);">No quizzes available yet.</p>
         <div v-for="quiz in quizzes" :key="quiz.quizId" class="card hover:scale-105 transition-transform">
           <NuxtLink :to="`/quiz/${quiz.quizId}`" class="block">
-            <h2 class="text-xl font-bold text-halloween-orange mb-2">{{ quiz.title }}</h2>
+            <h2 class="text-xl font-bold mb-2" style="color: var(--theme-primary);">{{ quiz.title }}</h2>
           </NuxtLink>
         </div>
       </div>
@@ -56,11 +58,11 @@
         <div v-for="img in images" :key="img.url" class="card p-0 overflow-hidden">
           <img :src="img.url" :alt="img.caption" class="w-full h-48 object-cover" />
           <div class="p-4">
-            <p class="text-sm text-halloween-ghost/70">{{ img.caption }}</p>
-            <span class="text-xs text-halloween-orange/60">{{ img.source }}</span>
+            <p class="text-sm" style="color: var(--theme-text-secondary);">{{ img.caption }}</p>
+            <span class="text-xs" style="color: var(--theme-primary); opacity: 0.7;">{{ img.source }}</span>
           </div>
         </div>
-        <div v-if="images.length === 0" class="col-span-full text-center text-halloween-ghost/60">
+        <div v-if="images.length === 0" class="col-span-full text-center" style="color: var(--theme-text-secondary);">
           No images available.
         </div>
       </div>

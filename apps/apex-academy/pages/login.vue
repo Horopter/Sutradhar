@@ -1,13 +1,13 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-halloween-bg via-halloween-dark to-halloween-bg px-4">
+  <div class="min-h-screen flex items-center justify-center px-4" style="background: linear-gradient(135deg, var(--theme-bg) 0%, var(--theme-dark) 100%);">
     <div class="max-w-md w-full card">
-      <h1 class="text-3xl font-bold text-center mb-8 text-halloween-orange">🎃 Welcome to Apex Academy</h1>
+      <h1 class="text-3xl font-bold text-center mb-8" style="color: var(--theme-primary);">🎓 Welcome to Apex Academy</h1>
 
-      <div v-if="error" class="mb-4 p-4 bg-red-900/30 border border-red-500/50 rounded-lg text-red-300">
+      <div v-if="error" class="mb-4 p-4 rounded-xl border border-red-500/30" style="background-color: rgba(239, 68, 68, 0.1); color: #dc2626;">
         {{ error }}
       </div>
 
-      <div v-if="magicLinkSent" class="mb-4 p-4 bg-green-900/30 border border-green-500/50 rounded-lg text-green-300">
+      <div v-if="magicLinkSent" class="mb-4 p-4 rounded-xl border border-green-500/30" style="background-color: rgba(34, 197, 94, 0.1); color: #16a34a;">
         Magic link sent! Check your email.
       </div>
 
@@ -22,17 +22,17 @@
 
       <div class="relative my-6">
         <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-halloween-orange/30"></div>
+          <div class="w-full border-t" style="border-color: var(--theme-border);"></div>
         </div>
         <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-halloween-card text-halloween-ghost/60">Or</span>
+          <span class="px-2" style="background-color: var(--theme-card); color: var(--theme-text-secondary);">Or</span>
         </div>
       </div>
 
       <!-- Magic Link Login -->
       <form @submit.prevent="handleMagicLink" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-halloween-ghost mb-2">Email</label>
+          <label class="block text-sm font-medium mb-2" style="color: var(--theme-text);">Email</label>
           <input
             v-model="email"
             type="email"

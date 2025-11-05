@@ -1,28 +1,28 @@
 <template>
-  <div class="min-h-screen bg-halloween-bg">
+  <div class="min-h-screen" style="background-color: var(--theme-bg);">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
       <div class="flex items-center justify-between mb-8">
         <div>
-          <NuxtLink to="/assignments" class="text-halloween-ghost/80 hover:text-halloween-orange hover:underline flex items-center gap-2 mb-2">
+          <NuxtLink to="/assignments" class="mb-2 inline-block flex items-center gap-2 hover:underline" style="color: var(--theme-text-secondary);">
             <span>←</span> All Assignments
           </NuxtLink>
-          <h1 class="text-4xl font-bold text-halloween-orange">
+          <h1 class="text-4xl font-bold" style="color: var(--theme-primary);">
             💻 Coding Practice - {{ course?.title || courseSlug }}
           </h1>
         </div>
       </div>
 
       <div v-if="loading" class="text-center py-12">
-        <div class="text-lg text-halloween-ghost/60">Loading assignments...</div>
+        <div class="text-lg" style="color: var(--theme-text-secondary);">Loading assignments...</div>
       </div>
 
-      <div v-else-if="error" class="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-red-300 mb-4">
+      <div v-else-if="error" class="rounded-xl border border-red-500/30 p-4 mb-4" style="background-color: rgba(239, 68, 68, 0.1); color: #dc2626;">
         {{ error }}
       </div>
 
       <div v-else-if="assignments.length === 0" class="text-center py-12">
-        <div class="text-2xl text-halloween-ghost/60 mb-4">No assignments available for this course</div>
-        <p class="text-halloween-ghost/40">Check back later for coding practice exercises!</p>
+        <div class="text-2xl mb-4" style="color: var(--theme-text-secondary);">No assignments available for this course</div>
+        <p style="color: var(--theme-text-secondary); opacity: 0.7;">Check back later for coding practice exercises!</p>
         <NuxtLink
           :to="`/course/${courseSlug}`"
           class="mt-4 inline-block btn-secondary"
@@ -36,19 +36,19 @@
           v-for="assignment in assignments"
           :key="assignment.assignmentId || assignment.id"
           :to="`/code/${assignment.assignmentId || assignment.id}`"
-          class="card hover:border-halloween-orange hover:shadow-halloween-orange/30 transition-all duration-300"
+          class="card transition-all duration-300"
         >
           <div class="flex items-start justify-between mb-3">
-            <h3 class="text-xl font-semibold text-halloween-orange flex-1">{{ assignment.title }}</h3>
-            <span class="ml-2 px-2 py-1 bg-halloween-dark border border-halloween-orange/30 rounded text-xs text-halloween-ghost/80 uppercase">
+            <h3 class="text-xl font-semibold flex-1" style="color: var(--theme-primary);">{{ assignment.title }}</h3>
+            <span class="ml-2 px-2 py-1 rounded text-xs uppercase" style="background-color: var(--theme-dark); border: 1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent); color: var(--theme-text-secondary);">
               {{ assignment.language || 'code' }}
             </span>
           </div>
-          <p v-if="assignment.description || assignment.prompt" class="text-halloween-ghost/80 text-sm mb-4 line-clamp-3">
+          <p v-if="assignment.description || assignment.prompt" class="text-sm mb-4 line-clamp-3" style="color: var(--theme-text-secondary);">
             {{ assignment.description || (assignment.prompt?.substring(0, 150) + '...') }}
           </p>
           <div class="flex items-center justify-end text-sm">
-            <span class="text-halloween-orange">Start Practice →</span>
+            <span style="color: var(--theme-primary);">Start Practice →</span>
           </div>
         </NuxtLink>
       </div>

@@ -62,10 +62,35 @@ export class CourseAgent extends BaseAgent {
       'java': 'Java',
       'web-development': 'Web development',
       'android': 'Android app development',
+      'android-app-development': 'Android app development', // Alternative slug format
       'machine-learning': 'Machine Learning',
     };
 
-    const dirName = dirMap[courseSlug] || courseSlug.charAt(0).toUpperCase() + courseSlug.slice(1);
+    // Try direct mapping first
+    let dirName: string | null = dirMap[courseSlug] || null;
+    
+    // If not found, try to find matching directory by slug normalization
+    if (!dirName) {
+      // Try to find directory that matches the slug when normalized
+      const courseDirs = fs.readdirSync(this.dataRepoPath, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name)
+        .filter(name => !name.startsWith('.') && name !== 'node_modules');
+      
+      // Normalize slug and try to match
+      const normalizedSlug = courseSlug.toLowerCase().replace(/-/g, ' ').replace(/\s+/g, ' ');
+      const foundDir = courseDirs.find(dir => {
+        const normalizedDir = dir.toLowerCase();
+        return normalizedDir.includes(normalizedSlug) || normalizedSlug.includes(normalizedDir);
+      });
+      dirName = foundDir || null;
+    }
+
+    // Fallback: capitalize first letter
+    if (!dirName) {
+      dirName = courseSlug.charAt(0).toUpperCase() + courseSlug.slice(1);
+    }
+
     const fullPath = path.join(this.dataRepoPath, dirName);
 
     if (fs.existsSync(fullPath)) {
@@ -124,6 +149,23 @@ export class CourseAgent extends BaseAgent {
         };
       });
 
+      // Sync lessons list to Convex for other agents
+      try {
+        for (const lesson of lessons) {
+          await this.convexMutation('lessons:upsert', {
+            courseSlug,
+            lessonId: lesson.id,
+            title: lesson.title,
+            body: '', // Will be populated when lesson is accessed
+            assets: [],
+            difficulty: lesson.difficulty
+          }, context);
+        }
+      } catch (syncError: any) {
+        // Log but don't fail - Convex sync is optional
+        console.warn(`Failed to sync lessons list to Convex: ${syncError.message}`);
+      }
+
       return this.success(lessons);
     } catch (error: any) {
       return this.error(error.message || 'Failed to list lessons');
@@ -160,6 +202,21 @@ export class CourseAgent extends BaseAgent {
         courseSlug,
         difficulty: 'beginner',
       };
+
+      // Sync lesson to Convex so other agents can access it
+      try {
+        await this.convexMutation('lessons:upsert', {
+          courseSlug,
+          lessonId,
+          title,
+          body: markdownContent,
+          assets: [],
+          difficulty: 'beginner'
+        }, context);
+      } catch (syncError: any) {
+        // Log but don't fail - Convex sync is optional
+        console.warn(`Failed to sync lesson to Convex: ${syncError.message}`);
+      }
 
       // TODO: Use Sutradhar to index content via retrieval agent
       // await this.executeViaSutradhar('retrieval-agent', 'index', { documents: [...] });

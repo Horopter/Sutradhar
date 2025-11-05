@@ -19,7 +19,7 @@ import { DataAgent } from './agents/data-agent';
 import { log } from './log';
 
 const app = express();
-const PORT = process.env.PORT || process.env.SUTRADHAR_PORT || 5000;
+const PORT = 3999; // Hardcoded port for Sutradhar
 
 // Middleware
 app.use(cors());

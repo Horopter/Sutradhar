@@ -118,12 +118,160 @@ export class CodeAgent extends BaseAgent {
         assignmentId,
         code,
         results,
-        submittedAt: Date.now()
-      });
+        createdAt: Date.now()
+      }, context);
       
       return this.success({ saved: true });
     } catch (error: any) {
       return this.error(error.message || 'Failed to save submission');
+    }
+  }
+
+  /**
+   * Analyze code for security vulnerabilities
+   */
+  async analyzeSecurity(
+    code: string,
+    language: string,
+    context?: AgentContext
+  ): Promise<AgentResult<{ vulnerabilities: Array<{ type: string; severity: string; description: string; line?: number }> }>> {
+    try {
+      const securityPrompt = `Analyze this ${language} code for security vulnerabilities:
+
+\`\`\`${language}
+${code}
+\`\`\`
+
+Return JSON array: [{type: string, severity: "low"|"medium"|"high"|"critical", description: string, line?: number}]`;
+
+      const llmResult = await this.executeViaSutradhar(
+        'llm-agent',
+        'chat',
+        {
+          system: 'You are a security expert. Return only valid JSON array.',
+          user: securityPrompt,
+          provider: 'openai',
+          model: 'gpt-4o-mini'
+        },
+        context
+      );
+
+      if (!llmResult.success || !llmResult.data) {
+        return this.error('Failed to analyze security');
+      }
+
+      let vulnerabilities: any[] = [];
+      try {
+        const text = llmResult.data.text?.trim() || '[]';
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        vulnerabilities = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+      } catch (e) {
+        vulnerabilities = [];
+      }
+
+      return this.success({ vulnerabilities });
+    } catch (error: any) {
+      return this.error(error.message || 'Failed to analyze security');
+    }
+  }
+
+  /**
+   * Check code style and best practices
+   */
+  async checkStyle(
+    code: string,
+    language: string,
+    context?: AgentContext
+  ): Promise<AgentResult<{ styleIssues: Array<{ type: string; message: string; suggestion: string }> }>> {
+    try {
+      const stylePrompt = `Check code style and best practices for this ${language} code:
+
+\`\`\`${language}
+${code}
+\`\`\`
+
+Return JSON array: [{type: "naming"|"formatting"|"structure"|"performance", message: string, suggestion: string}]`;
+
+      const llmResult = await this.executeViaSutradhar(
+        'llm-agent',
+        'chat',
+        {
+          system: 'You are a code style expert. Return only valid JSON array.',
+          user: stylePrompt,
+          provider: 'openai',
+          model: 'gpt-4o-mini'
+        },
+        context
+      );
+
+      if (!llmResult.success || !llmResult.data) {
+        return this.error('Failed to check style');
+      }
+
+      let styleIssues: any[] = [];
+      try {
+        const text = llmResult.data.text?.trim() || '[]';
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        styleIssues = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+      } catch (e) {
+        styleIssues = [];
+      }
+
+      return this.success({ styleIssues });
+    } catch (error: any) {
+      return this.error(error.message || 'Failed to check style');
+    }
+  }
+
+  /**
+   * Get code explanation
+   */
+  async explainCode(
+    code: string,
+    language: string,
+    context?: AgentContext
+  ): Promise<AgentResult<{ explanation: string; lineByLine?: Array<{ line: number; explanation: string }> }>> {
+    try {
+      const explainPrompt = `Explain this ${language} code in detail:
+
+\`\`\`${language}
+${code}
+\`\`\`
+
+Provide:
+1. Overall explanation
+2. Line-by-line breakdown (for code under 50 lines)
+
+Return JSON: {explanation: string, lineByLine?: [{line: number, explanation: string}]}`;
+
+      const llmResult = await this.executeViaSutradhar(
+        'llm-agent',
+        'chat',
+        {
+          system: 'You are an expert code explainer. Return only valid JSON.',
+          user: explainPrompt,
+          provider: 'openai',
+          model: 'gpt-4o-mini'
+        },
+        context
+      );
+
+      if (!llmResult.success || !llmResult.data) {
+        return this.error('Failed to explain code');
+      }
+
+      let explanation: any;
+      try {
+        const text = llmResult.data.text?.trim() || '{}';
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        explanation = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+      } catch (e) {
+        explanation = { explanation: 'Unable to generate explanation' };
+      }
+
+      return this.success(explanation);
+    } catch (error: any) {
+      return this.error(error.message || 'Failed to explain code');
     }
   }
 }

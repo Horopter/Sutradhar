@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  devServer: {
+    port: 3777 // Hardcoded port for Apex Academy
+  },
   modules: [
     '@nuxtjs/tailwindcss',
     '@nuxt/image'
@@ -8,7 +11,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
-      optimusBaseUrl: process.env.OPTIMUS_BASE_URL || 'http://localhost:4001'
+      optimusBaseUrl: 'http://localhost:3888' // Hardcoded Optimus URL
     }
   },
   app: {
@@ -16,8 +19,12 @@ export default defineNuxtConfig({
       title: 'Apex Academy',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Apex Academy - Learn Computer Science' }
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes' },
+        { name: 'description', content: 'Apex Academy - Learn Computer Science' },
+        { name: 'color-scheme', content: 'light' }, // Force light mode, ignore system preference
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }

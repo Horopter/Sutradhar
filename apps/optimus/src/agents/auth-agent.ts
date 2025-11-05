@@ -86,7 +86,7 @@ export class AuthAgent extends BaseAgent {
         {
           to: email,
           subject: 'Apex Academy - Magic Link Login',
-          text: `Click this link to login: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/verify?token=${token}`,
+          text: `Click this link to login: http://localhost:3777/auth/verify?token=${token}`, // Hardcoded Apex Academy URL
         },
         context
       );

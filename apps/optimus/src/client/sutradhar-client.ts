@@ -8,7 +8,7 @@ import { AgentDefinition, AgentTask, AgentResult } from '../sutradhar-client/typ
 export class SutradharClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = process.env.SUTRADHAR_URL || 'http://localhost:5000') {
+  constructor(baseUrl: string = 'http://localhost:3999') { // Hardcoded Sutradhar URL
     this.baseUrl = baseUrl;
   }
 

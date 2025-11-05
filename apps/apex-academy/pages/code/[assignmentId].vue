@@ -1,26 +1,26 @@
 <template>
-  <div class="min-h-screen bg-halloween-bg">
+  <div class="min-h-screen" style="background-color: var(--theme-bg);">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
-      <NuxtLink to="/catalog" class="text-halloween-orange hover:text-halloween-pumpkin hover:underline mb-4 inline-block flex items-center gap-2">
+      <NuxtLink to="/catalog" class="mb-4 inline-block flex items-center gap-2 hover:underline" style="color: var(--theme-primary);">
         <span>←</span> Back to Catalog
       </NuxtLink>
 
       <div v-if="loading" class="text-center py-12">
-        <div class="text-lg text-halloween-ghost/60">Loading assignment...</div>
+        <div class="text-lg" style="color: var(--theme-text-secondary);">Loading assignment...</div>
       </div>
 
-      <div v-else-if="error" class="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-red-300 mb-4">
+      <div v-else-if="error" class="rounded-xl border border-red-500/30 p-4 mb-4" style="background-color: rgba(239, 68, 68, 0.1); color: #dc2626;">
         {{ error }}
       </div>
 
       <div v-else-if="assignment" class="grid md:grid-cols-2 gap-6">
         <div class="card">
-          <h1 class="text-2xl font-bold mb-4 text-halloween-orange">{{ assignment.title }}</h1>
-          <div class="prose prose-invert mb-6 prose-headings:text-halloween-orange prose-strong:text-halloween-orange">
-            <p class="text-halloween-ghost/80">{{ assignment.description }}</p>
-            <div class="bg-halloween-dark border border-halloween-orange/30 p-4 rounded-lg mt-4">
-              <strong class="text-halloween-orange">Prompt:</strong>
-              <pre class="mt-2 whitespace-pre-wrap text-halloween-ghost/80">{{ assignment.prompt }}</pre>
+          <h1 class="text-2xl font-bold mb-4" style="color: var(--theme-primary);">{{ assignment.title }}</h1>
+          <div class="prose max-w-none mb-6" style="color: var(--theme-text);">
+            <p style="color: var(--theme-text-secondary);">{{ assignment.description }}</p>
+            <div class="p-4 rounded-lg mt-4" style="background-color: var(--theme-dark); border: 1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent);">
+              <strong style="color: var(--theme-primary);">Prompt:</strong>
+              <pre class="mt-2 whitespace-pre-wrap" style="color: var(--theme-text-secondary);">{{ assignment.prompt }}</pre>
             </div>
           </div>
 
@@ -28,39 +28,45 @@
             <button
               @click="handleGetHint"
               :disabled="gettingHint"
-              class="px-4 py-2 bg-halloween-orange/80 text-black rounded-lg hover:bg-halloween-pumpkin transition disabled:opacity-50 font-semibold"
+              class="btn-primary"
             >
               {{ gettingHint ? 'Getting hint...' : '💡 Get Hint' }}
             </button>
             <button
               @click="handleRunCode"
               :disabled="running"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 font-semibold"
+              class="px-4 py-2 rounded-lg transition disabled:opacity-50 font-semibold"
+              style="background-color: #16a34a; color: white;"
+              onmouseover="this.style.backgroundColor='#15803d'"
+              onmouseout="this.style.backgroundColor='#16a34a'"
             >
               {{ running ? 'Running...' : '▶️ Run Code' }}
             </button>
           </div>
 
-          <div v-if="hint" class="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4 mb-4">
-            <strong class="text-yellow-400">💡 Hint:</strong>
-            <p class="mt-2 text-yellow-200">{{ hint }}</p>
+          <div v-if="hint" class="rounded-lg border border-yellow-500/30 p-4 mb-4" style="background-color: rgba(234, 179, 8, 0.1);">
+            <strong style="color: #ca8a04;">💡 Hint:</strong>
+            <p class="mt-2" style="color: #a16207;">{{ hint }}</p>
           </div>
 
-          <div v-if="runResult" class="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4">
-            <strong class="text-blue-300">📋 Result:</strong>
-            <pre class="mt-2 whitespace-pre-wrap text-blue-200">{{ runResult }}</pre>
+          <div v-if="runResult" class="rounded-lg border border-blue-500/30 p-4" style="background-color: rgba(59, 130, 246, 0.1);">
+            <strong style="color: #2563eb;">📋 Result:</strong>
+            <pre class="mt-2 whitespace-pre-wrap" style="color: #1e40af;">{{ runResult }}</pre>
           </div>
         </div>
 
         <div class="card">
-          <h2 class="text-xl font-semibold mb-4 text-halloween-orange">💻 Code Editor</h2>
+          <h2 class="text-xl font-semibold mb-4" style="color: var(--theme-primary);">💻 Code Editor</h2>
           <textarea
             v-model="code"
-            class="w-full h-96 font-mono text-sm bg-halloween-dark border border-halloween-orange/30 rounded-lg p-4 text-halloween-ghost focus:outline-none focus:border-halloween-orange focus:ring-2 focus:ring-halloween-orange/50 placeholder-gray-500"
+            class="w-full h-96 font-mono text-sm rounded-lg p-4 focus:outline-none focus:ring-2 transition"
             :placeholder="assignment.starterCode || `// Write your ${assignment.language} code here`"
+            style="background-color: var(--theme-dark); border: 1.5px solid color-mix(in srgb, var(--theme-primary) 30%, transparent); color: var(--theme-text); --tw-ring-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);"
+            @focus="$event.target.style.borderColor = 'var(--theme-primary)'"
+            @blur="$event.target.style.borderColor = 'color-mix(in srgb, var(--theme-primary) 30%, transparent)'"
           ></textarea>
-          <div class="mt-4 text-sm text-halloween-ghost/80">
-            Language: <span class="font-semibold text-halloween-orange">{{ assignment.language }}</span>
+          <div class="mt-4 text-sm" style="color: var(--theme-text-secondary);">
+            Language: <span class="font-semibold" style="color: var(--theme-primary);">{{ assignment.language }}</span>
           </div>
         </div>
       </div>

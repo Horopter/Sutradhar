@@ -15,11 +15,17 @@ import { ProgressAgent } from '../agents/progress-agent';
 import { ImageAgent } from '../agents/image-agent';
 import { StudyPlanAgent } from '../agents/study-plan-agent';
 import { NotificationAgent } from '../agents/notification-agent';
+import { AdaptiveLearningAgent } from '../agents/adaptive-learning-agent';
+import { AnalyticsAgent } from '../agents/analytics-agent';
+import { GamificationAgent } from '../agents/gamification-agent';
+import { ContentGenerationAgent } from '../agents/content-generation-agent';
+import { SocialAgent } from '../agents/social-agent';
+import { AssessmentAgent } from '../agents/assessment-agent';
 
 const router = Router();
 
 // Initialize Sutradhar client
-const sutradharClient = new SutradharClient(process.env.SUTRADHAR_URL || 'http://localhost:5000');
+const sutradharClient = new SutradharClient('http://localhost:3999'); // Hardcoded Sutradhar URL
 
 // Initialize agents with Sutradhar client
 const authAgent = new AuthAgent(sutradharClient);
@@ -31,6 +37,12 @@ const progressAgent = new ProgressAgent(sutradharClient);
 const imageAgent = new ImageAgent(sutradharClient);
 const studyPlanAgent = new StudyPlanAgent(sutradharClient);
 const notificationAgent = new NotificationAgent(sutradharClient);
+const adaptiveLearningAgent = new AdaptiveLearningAgent(sutradharClient);
+const analyticsAgent = new AnalyticsAgent(sutradharClient);
+const gamificationAgent = new GamificationAgent(sutradharClient);
+const contentGenerationAgent = new ContentGenerationAgent(sutradharClient);
+const socialAgent = new SocialAgent(sutradharClient);
+const assessmentAgent = new AssessmentAgent(sutradharClient);
 
 // Helper function for async route handlers
 const asyncHandler = (fn: (req: Request, res: Response) => Promise<void | Response>) => {
@@ -88,8 +100,10 @@ router.get('/catalog', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 router.get('/course/:slug/lessons', asyncHandler(async (req: Request, res: Response) => {
-  const result = await courseAgent.listLessons(req.params.slug, { requestId: req.headers['x-request-id'] as string });
-  res.status(result.success ? 200 : 500).json({
+  // Decode course slug (handle URL encoding)
+  const courseSlug = decodeURIComponent(req.params.slug);
+  const result = await courseAgent.listLessons(courseSlug, { requestId: req.headers['x-request-id'] as string });
+  res.status(result.success ? 200 : (result.error?.includes('not found') ? 404 : 500)).json({
     ok: result.success,
     lessons: result.success ? result.data : [],
     error: result.success ? undefined : result.error
@@ -97,15 +111,18 @@ router.get('/course/:slug/lessons', asyncHandler(async (req: Request, res: Respo
 }));
 
 router.get('/lesson/:id', asyncHandler(async (req: Request, res: Response) => {
-  const courseSlug = req.query.courseSlug as string;
+  // Decode both courseSlug and lessonId (handle URL encoding)
+  const courseSlug = decodeURIComponent((req.query.courseSlug as string) || '');
+  const lessonId = decodeURIComponent(req.params.id);
+  
   if (!courseSlug) {
     return res.status(400).json({ ok: false, error: 'courseSlug query parameter required' });
   }
   
-  const result = await courseAgent.getLesson(courseSlug, req.params.id, { requestId: req.headers['x-request-id'] as string });
-  res.status(result.success ? 200 : 500).json({
+  const result = await courseAgent.getLesson(courseSlug, lessonId, { requestId: req.headers['x-request-id'] as string });
+  res.status(result.success ? 200 : (result.error?.includes('not found') ? 404 : 500)).json({
     ok: result.success,
-    ...(result.success ? result.data : { error: result.error })
+    ...(result.success ? { lesson: result.data } : { error: result.error })
   });
 }));
 
@@ -117,8 +134,8 @@ router.post('/lesson/:id/query', asyncHandler(async (req: Request, res: Response
     return res.status(400).json({ ok: false, error: 'Query required' });
   }
   
-  const courseSlug = req.query.courseSlug as string || '';
-  const lessonId = req.params.id;
+  const courseSlug = decodeURIComponent((req.query.courseSlug as string) || '');
+  const lessonId = decodeURIComponent(req.params.id);
   const sessionId = String(req.query.sessionId || req.body.sessionId || 'lesson-session');
   
   if (!courseSlug) {
@@ -134,7 +151,7 @@ router.post('/lesson/:id/query', asyncHandler(async (req: Request, res: Response
   
   const lesson = lessonResult.data;
   const lessonTitle = lesson.title || '';
-  const lessonUrl = url || `http://localhost:3000/lesson/${lessonId}?courseSlug=${courseSlug}`;
+  const lessonUrl = url || `http://localhost:3777/lesson/${lessonId}?courseSlug=${courseSlug}`; // Hardcoded Apex Academy URL
   
   // Use Sutradhar LLM agent to detect intent
   const intentPrompt = `Analyze the following user query and determine the intent. The user is viewing a lesson titled "${lessonTitle}".
@@ -324,8 +341,8 @@ Respond ONLY with a JSON object in this exact format:
 }));
 
 router.post('/lesson/:id/summarize', asyncHandler(async (req: Request, res: Response) => {
-  const courseSlug = req.query.courseSlug as string;
-  const lessonId = req.params.id;
+  const courseSlug = decodeURIComponent((req.query.courseSlug as string) || '');
+  const lessonId = decodeURIComponent(req.params.id);
   
   if (!courseSlug) {
     return res.status(400).json({ ok: false, error: 'courseSlug query parameter required' });
@@ -366,11 +383,19 @@ router.post('/lesson/:id/summarize', asyncHandler(async (req: Request, res: Resp
 
 router.post('/lesson/:id/answer', asyncHandler(async (req: Request, res: Response) => {
   const { question } = req.body;
-  if (!question) {
+  if (!question || typeof question !== 'string') {
     return res.status(400).json({ ok: false, error: 'Question required' });
   }
   
-  const result = await tutoringAgent.answer(question, { requestId: req.headers['x-request-id'] as string });
+  // Decode lesson ID and courseSlug if provided
+  const lessonId = decodeURIComponent(req.params.id);
+  const courseSlug = req.query.courseSlug ? decodeURIComponent(req.query.courseSlug as string) : undefined;
+  
+  const result = await tutoringAgent.answer(question, { 
+    requestId: req.headers['x-request-id'] as string,
+    lessonId,
+    courseSlug
+  });
   res.status(result.success ? 200 : 500).json({
     ok: result.success,
     ...(result.success ? result.data : { error: result.error })
@@ -689,12 +714,816 @@ router.get('/agents', asyncHandler(async (req: Request, res: Response) => {
     progressAgent.getInfo(),
     imageAgent.getInfo(),
     studyPlanAgent.getInfo(),
-    notificationAgent.getInfo()
+    notificationAgent.getInfo(),
+    adaptiveLearningAgent.getInfo(),
+    analyticsAgent.getInfo(),
+    gamificationAgent.getInfo(),
+    contentGenerationAgent.getInfo(),
+    socialAgent.getInfo(),
+    assessmentAgent.getInfo()
   ];
   
   res.json({
     ok: true,
     agents
+  });
+}));
+
+// ========== Adaptive Learning Routes ==========
+
+router.post('/learning/path', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, courseSlug } = req.body;
+  if (!userId || !courseSlug) {
+    return res.status(400).json({ ok: false, error: 'userId and courseSlug required' });
+  }
+  
+  const result = await adaptiveLearningAgent.createLearningPath(userId, courseSlug, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/learning/recommendations', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  const limit = parseInt(req.query.limit as string) || 5;
+  
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await adaptiveLearningAgent.getRecommendations(userId, limit, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    recommendations: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.put('/learning/preferences', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, ...preferences } = req.body;
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await adaptiveLearningAgent.updatePreferences(userId, preferences, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/learning/adjust-difficulty', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, courseSlug, performance } = req.body;
+  if (!userId || !courseSlug || performance === undefined) {
+    return res.status(400).json({ ok: false, error: 'userId, courseSlug, and performance required' });
+  }
+  
+  const result = await adaptiveLearningAgent.adjustDifficulty(userId, courseSlug, performance, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/learning/detect-style', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.body.userId;
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await adaptiveLearningAgent.detectLearningStyle(userId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+// ========== Analytics Routes ==========
+
+router.get('/analytics', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  const startDate = req.query.startDate as string;
+  const endDate = req.query.endDate as string;
+  
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await analyticsAgent.getAnalytics(userId, startDate, endDate, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    analytics: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.post('/analytics/session', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, activityType, itemsCompleted } = req.body;
+  if (!userId || !activityType) {
+    return res.status(400).json({ ok: false, error: 'userId and activityType required' });
+  }
+  
+  const result = await analyticsAgent.trackSession(userId, activityType, itemsCompleted || [], {
+    requestId: req.headers['x-request-id'] as string,
+    sessionStartTime: req.body.sessionStartTime || Date.now()
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/analytics/predict-completion', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  const courseSlug = req.query.courseSlug as string;
+  
+  if (!userId || !courseSlug) {
+    return res.status(400).json({ ok: false, error: 'userId and courseSlug required' });
+  }
+  
+  const result = await analyticsAgent.predictCompletion(userId, courseSlug, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/analytics/at-risk', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  const courseSlug = req.query.courseSlug as string;
+  
+  if (!userId || !courseSlug) {
+    return res.status(400).json({ ok: false, error: 'userId and courseSlug required' });
+  }
+  
+  const result = await analyticsAgent.detectAtRisk(userId, courseSlug, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/analytics/optimal-times', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await analyticsAgent.getOptimalLearningTimes(userId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/analytics/report', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  const period = (req.query.period as 'week' | 'month') || 'week';
+  
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await analyticsAgent.generateReport(userId, period, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+// ========== Gamification Routes ==========
+
+router.get('/gamification/achievements', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await gamificationAgent.getUserAchievements(userId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    achievements: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.post('/gamification/award-badge', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, badgeId } = req.body;
+  if (!userId || !badgeId) {
+    return res.status(400).json({ ok: false, error: 'userId and badgeId required' });
+  }
+  
+  const result = await gamificationAgent.awardBadge(userId, badgeId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/gamification/check-badges', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, eventType, eventData } = req.body;
+  if (!userId || !eventType) {
+    return res.status(400).json({ ok: false, error: 'userId and eventType required' });
+  }
+  
+  const result = await gamificationAgent.checkAndAwardBadges(userId, eventType, eventData || {}, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    badges: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.post('/gamification/points', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, amount, source } = req.body;
+  if (!userId || !amount || !source) {
+    return res.status(400).json({ ok: false, error: 'userId, amount, and source required' });
+  }
+  
+  const result = await gamificationAgent.addPoints(userId, amount, source, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/gamification/points', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const totalPoints = await gamificationAgent.getTotalPoints(userId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.json({
+    ok: true,
+    totalPoints
+  });
+}));
+
+router.get('/gamification/leaderboard', asyncHandler(async (req: Request, res: Response) => {
+  const type = (req.query.type as 'global' | 'course' | 'weekly' | 'monthly') || 'global';
+  const courseSlug = req.query.courseSlug as string;
+  const limit = parseInt(req.query.limit as string) || 100;
+  
+  const result = await gamificationAgent.getLeaderboard(type, courseSlug, limit, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    leaderboard: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.get('/gamification/rank', asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  const type = (req.query.type as 'global' | 'course' | 'weekly' | 'monthly') || 'global';
+  const courseSlug = req.query.courseSlug as string;
+  
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await gamificationAgent.getUserRank(userId, type, courseSlug, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+// ========== Content Generation Routes ==========
+
+router.post('/content/summary', asyncHandler(async (req: Request, res: Response) => {
+  const { courseSlug, lessonId } = req.body;
+  if (!courseSlug || !lessonId) {
+    return res.status(400).json({ ok: false, error: 'courseSlug and lessonId required' });
+  }
+  
+  const result = await contentGenerationAgent.generateSummary(courseSlug, lessonId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/content/quiz', asyncHandler(async (req: Request, res: Response) => {
+  const { courseSlug, lessonId, difficulty, numQuestions } = req.body;
+  if (!courseSlug || !lessonId) {
+    return res.status(400).json({ ok: false, error: 'courseSlug and lessonId required' });
+  }
+  
+  const result = await contentGenerationAgent.generateQuiz(
+    courseSlug,
+    lessonId,
+    difficulty || 'intermediate',
+    numQuestions || 5,
+    {
+      requestId: req.headers['x-request-id'] as string
+    }
+  );
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/content/examples', asyncHandler(async (req: Request, res: Response) => {
+  const { courseSlug, lessonId, topic, numExamples } = req.body;
+  if (!courseSlug || !lessonId || !topic) {
+    return res.status(400).json({ ok: false, error: 'courseSlug, lessonId, and topic required' });
+  }
+  
+  const result = await contentGenerationAgent.generateExamples(
+    courseSlug,
+    lessonId,
+    topic,
+    numExamples || 3,
+    {
+      requestId: req.headers['x-request-id'] as string
+    }
+  );
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/content/flashcards', asyncHandler(async (req: Request, res: Response) => {
+  const { courseSlug, lessonId, numCards } = req.body;
+  if (!courseSlug || !lessonId) {
+    return res.status(400).json({ ok: false, error: 'courseSlug and lessonId required' });
+  }
+  
+  const result = await contentGenerationAgent.generateFlashcards(
+    courseSlug,
+    lessonId,
+    numCards || 10,
+    {
+      requestId: req.headers['x-request-id'] as string
+    }
+  );
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/content/notes', asyncHandler(async (req: Request, res: Response) => {
+  const { courseSlug, lessonId } = req.body;
+  if (!courseSlug || !lessonId) {
+    return res.status(400).json({ ok: false, error: 'courseSlug and lessonId required' });
+  }
+  
+  const result = await contentGenerationAgent.generateNotes(courseSlug, lessonId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/content/practice-problems', asyncHandler(async (req: Request, res: Response) => {
+  const { courseSlug, lessonId, difficulty, numProblems } = req.body;
+  if (!courseSlug || !lessonId) {
+    return res.status(400).json({ ok: false, error: 'courseSlug and lessonId required' });
+  }
+  
+  const result = await contentGenerationAgent.generatePracticeProblems(
+    courseSlug,
+    lessonId,
+    difficulty || 'intermediate',
+    numProblems || 5,
+    {
+      requestId: req.headers['x-request-id'] as string
+    }
+  );
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+// ========== Social Routes ==========
+
+router.post('/social/study-group', asyncHandler(async (req: Request, res: Response) => {
+  const { name, courseSlug, description, createdBy, isPublic } = req.body;
+  if (!name || !courseSlug || !createdBy) {
+    return res.status(400).json({ ok: false, error: 'name, courseSlug, and createdBy required' });
+  }
+  
+  const result = await socialAgent.createStudyGroup(name, courseSlug, description || '', createdBy, isPublic !== false, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/social/study-group/:groupId/join', asyncHandler(async (req: Request, res: Response) => {
+  const { groupId } = req.params;
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: 'userId required' });
+  }
+  
+  const result = await socialAgent.joinStudyGroup(groupId, userId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/social/study-groups', asyncHandler(async (req: Request, res: Response) => {
+  const courseSlug = req.query.courseSlug as string;
+  const limit = parseInt(req.query.limit as string) || 20;
+  
+  if (!courseSlug) {
+    return res.status(400).json({ ok: false, error: 'courseSlug required' });
+  }
+  
+  const result = await socialAgent.getStudyGroups(courseSlug, limit, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    groups: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.post('/social/forum/post', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, lessonId, courseSlug, title, content, tags } = req.body;
+  if (!userId || !lessonId || !courseSlug || !title || !content) {
+    return res.status(400).json({ ok: false, error: 'userId, lessonId, courseSlug, title, and content required' });
+  }
+  
+  const result = await socialAgent.createPost(userId, lessonId, courseSlug, title, content, tags || [], {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/social/forum/posts', asyncHandler(async (req: Request, res: Response) => {
+  const lessonId = req.query.lessonId as string;
+  const limit = parseInt(req.query.limit as string) || 20;
+  
+  if (!lessonId) {
+    return res.status(400).json({ ok: false, error: 'lessonId required' });
+  }
+  
+  const result = await socialAgent.getPosts(lessonId, limit, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    posts: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.post('/social/forum/reply', asyncHandler(async (req: Request, res: Response) => {
+  const { postId, userId, content } = req.body;
+  if (!postId || !userId || !content) {
+    return res.status(400).json({ ok: false, error: 'postId, userId, and content required' });
+  }
+  
+  const result = await socialAgent.replyToPost(postId, userId, content, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/social/forum/replies', asyncHandler(async (req: Request, res: Response) => {
+  const postId = req.query.postId as string;
+  const limit = parseInt(req.query.limit as string) || 50;
+  
+  if (!postId) {
+    return res.status(400).json({ ok: false, error: 'postId required' });
+  }
+  
+  const result = await socialAgent.getReplies(postId, limit, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    replies: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.post('/social/forum/upvote', asyncHandler(async (req: Request, res: Response) => {
+  const { itemType, itemId, userId } = req.body;
+  if (!itemType || !itemId || !userId) {
+    return res.status(400).json({ ok: false, error: 'itemType, itemId, and userId required' });
+  }
+  
+  const result = await socialAgent.upvote(itemType, itemId, userId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/social/forum/accept-answer', asyncHandler(async (req: Request, res: Response) => {
+  const { postId, replyId, userId } = req.body;
+  if (!postId || !replyId || !userId) {
+    return res.status(400).json({ ok: false, error: 'postId, replyId, and userId required' });
+  }
+  
+  const result = await socialAgent.acceptAnswer(postId, replyId, userId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/social/live-session', asyncHandler(async (req: Request, res: Response) => {
+  const { title, hostId, courseSlug, type, scheduledAt } = req.body;
+  if (!title || !hostId || !courseSlug || !type) {
+    return res.status(400).json({ ok: false, error: 'title, hostId, courseSlug, and type required' });
+  }
+  
+  const result = await socialAgent.createLiveSession(title, hostId, courseSlug, type, scheduledAt, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.get('/social/live-sessions', asyncHandler(async (req: Request, res: Response) => {
+  const courseSlug = req.query.courseSlug as string;
+  if (!courseSlug) {
+    return res.status(400).json({ ok: false, error: 'courseSlug required' });
+  }
+  
+  const result = await socialAgent.getLiveSessions(courseSlug, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    sessions: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+router.get('/social/forum/search', asyncHandler(async (req: Request, res: Response) => {
+  const query = req.query.query as string;
+  const courseSlug = req.query.courseSlug as string;
+  const tags = req.query.tags ? (req.query.tags as string).split(',') : undefined;
+  const limit = parseInt(req.query.limit as string) || 20;
+  
+  if (!query) {
+    return res.status(400).json({ ok: false, error: 'query required' });
+  }
+  
+  const result = await socialAgent.searchPosts(query, courseSlug, tags, limit, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    posts: result.success ? result.data : [],
+    error: result.success ? undefined : result.error
+  });
+}));
+
+// ========== Assessment Routes ==========
+
+router.post('/assessment/adaptive-quiz', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, courseSlug, lessonId } = req.body;
+  if (!userId || !courseSlug || !lessonId) {
+    return res.status(400).json({ ok: false, error: 'userId, courseSlug, and lessonId required' });
+  }
+  
+  const result = await assessmentAgent.generateAdaptiveQuiz(userId, courseSlug, lessonId, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/assessment/code-review', asyncHandler(async (req: Request, res: Response) => {
+  const { submissionId, code, assignmentPrompt } = req.body;
+  if (!submissionId || !code || !assignmentPrompt) {
+    return res.status(400).json({ ok: false, error: 'submissionId, code, and assignmentPrompt required' });
+  }
+  
+  const result = await assessmentAgent.reviewCode(submissionId, code, assignmentPrompt, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/assessment/quiz-feedback', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, quizId, answers } = req.body;
+  if (!userId || !quizId || !answers) {
+    return res.status(400).json({ ok: false, error: 'userId, quizId, and answers required' });
+  }
+  
+  const result = await assessmentAgent.generateQuizFeedback(userId, quizId, answers, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/assessment/assess-skill', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, skillName } = req.body;
+  if (!userId || !skillName) {
+    return res.status(400).json({ ok: false, error: 'userId and skillName required' });
+  }
+  
+  const result = await assessmentAgent.assessSkill(userId, skillName, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/assessment/practice-questions', asyncHandler(async (req: Request, res: Response) => {
+  const { userId, courseSlug, weakTopics, numQuestions } = req.body;
+  if (!userId || !courseSlug || !weakTopics || !Array.isArray(weakTopics)) {
+    return res.status(400).json({ ok: false, error: 'userId, courseSlug, and weakTopics array required' });
+  }
+  
+  const result = await assessmentAgent.generatePracticeQuestions(
+    userId,
+    courseSlug,
+    weakTopics,
+    numQuestions || 5,
+    {
+      requestId: req.headers['x-request-id'] as string
+    }
+  );
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+// ========== Enhanced Code Routes ==========
+
+router.post('/code/analyze', asyncHandler(async (req: Request, res: Response) => {
+  const { code, assignmentPrompt } = req.body;
+  if (!code || !assignmentPrompt) {
+    return res.status(400).json({ ok: false, error: 'code and assignmentPrompt required' });
+  }
+  
+  const result = await tutoringAgent.analyzeCode(code, assignmentPrompt, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/code/security', asyncHandler(async (req: Request, res: Response) => {
+  const { code, language } = req.body;
+  if (!code || !language) {
+    return res.status(400).json({ ok: false, error: 'code and language required' });
+  }
+  
+  const result = await codeAgent.analyzeSecurity(code, language, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/code/style', asyncHandler(async (req: Request, res: Response) => {
+  const { code, language } = req.body;
+  if (!code || !language) {
+    return res.status(400).json({ ok: false, error: 'code and language required' });
+  }
+  
+  const result = await codeAgent.checkStyle(code, language, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
+  });
+}));
+
+router.post('/code/explain', asyncHandler(async (req: Request, res: Response) => {
+  const { code, language } = req.body;
+  if (!code || !language) {
+    return res.status(400).json({ ok: false, error: 'code and language required' });
+  }
+  
+  const result = await codeAgent.explainCode(code, language, {
+    requestId: req.headers['x-request-id'] as string
+  });
+  
+  res.status(result.success ? 200 : 500).json({
+    ok: result.success,
+    ...(result.success ? result.data : { error: result.error })
   });
 }));
 
