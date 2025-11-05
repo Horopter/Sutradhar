@@ -7,6 +7,8 @@ dist/
 **/dist/
 *.tsbuildinfo
 build/
+coverage/
+**/coverage/
 
 # Environment
 .env
@@ -40,6 +42,13 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Backup files
+*.bak
+*.backup
+*.old
+**/pages.backup/
+**/*.backup/
 
 # IDE
 .vscode/

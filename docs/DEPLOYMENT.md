@@ -196,6 +196,140 @@ GRACEFUL_SHUTDOWN_TIMEOUT=30000
 - Version control `docker-compose.yml`
 - Document deployment procedures
 
+## Kubernetes Deployment
+
+### Prerequisites
+- Kubernetes cluster (1.24+)
+- kubectl configured
+- Helm 3.x (optional)
+
+### Deployment Configuration
+
+**Deployment:**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sutradhar-worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sutradhar-worker
+  template:
+    spec:
+      containers:
+      - name: worker
+        image: sutradhar-worker:latest
+        ports:
+        - containerPort: 2198
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: sutradhar-secrets
+              key: redis-url
+        livenessProbe:
+          httpGet:
+            path: /health/heartbeat
+            port: 2198
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/heartbeat
+            port: 2198
+          initialDelaySeconds: 10
+          periodSeconds: 5
+```
+
+**Service:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: sutradhar-worker
+spec:
+  selector:
+    app: sutradhar-worker
+  ports:
+  - port: 80
+    targetPort: 2198
+  type: ClusterIP
+```
+
+**HorizontalPodAutoscaler:**
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sutradhar-worker-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sutradhar-worker
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+**Ingress:**
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sutradhar-api
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - api.yourdomain.com
+    secretName: sutradhar-tls
+  rules:
+  - host: api.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sutradhar-worker
+            port:
+              number: 80
+```
+
+### Kubernetes Commands
+
+```bash
+# Create secrets
+kubectl create secret generic sutradhar-secrets \
+  --from-literal=redis-url=redis://redis-service:6379 \
+  --from-literal=openai-api-key=your-key
+
+# Apply configurations
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/hpa.yaml
+kubectl apply -f k8s/ingress.yaml
+
+# Check status
+kubectl get pods -l app=sutradhar-worker
+kubectl logs -f deployment/sutradhar-worker
+
+# Scale
+kubectl scale deployment sutradhar-worker --replicas=5
+```
+
 ## Troubleshooting
 
 ### Common Issues

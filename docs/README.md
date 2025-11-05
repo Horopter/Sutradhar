@@ -1,33 +1,67 @@
-# Sutradhar Documentation
+# Documentation Index
 
-This directory contains comprehensive documentation for the Sutradhar project.
+This directory contains all consolidated documentation for the Sutradhar project.
 
-## Documentation Index
+## Core Documentation
 
-### Core Documentation
-- **[API_README.md](API_README.md)** - Complete API reference and quick start guide
-- **[API_DETAILED_EXPLANATIONS.md](API_DETAILED_EXPLANATIONS.md)** - Detailed explanations of each API/service
-- **[API_INTEGRATIONS.md](API_INTEGRATIONS.md)** - Integration status and setup for external APIs
+### 📐 [ARCHITECTURE.md](ARCHITECTURE.md)
+Complete architecture documentation:
+- System overview and high-level design
+- Architecture layers (API, Service, Plugin, Integration, Data)
+- Agent-based architecture with detailed agent descriptions
+- Folder structure and organization
+- Performance optimizations
+- Guardrails system
+- Design principles and scalability features
 
-### Architecture
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture overview
-- **[ARCHITECTURE_FOLDER_STRUCTURE.md](ARCHITECTURE_FOLDER_STRUCTURE.md)** - Detailed folder structure and organization
+### 🎯 [AGENT_ORCHESTRATION.md](AGENT_ORCHESTRATION.md)
+Agent orchestration vision and architecture:
+- Evolution from internal agents to orchestrator platform
+- Agent as first-class entity (similar to Kubernetes pods)
+- Multiple runtime support (in-process, HTTP, container, process)
+- Agent discovery, load balancing, health monitoring
+- Auto-scaling and circuit breakers
+- Competitive advantages and key differentiators
+- Migration path from current architecture
 
-### Deployment & Operations
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment guide
-- **[KUBERNETES.md](KUBERNETES.md)** - Kubernetes deployment guide
-- **[SECRETS_MANAGEMENT.md](SECRETS_MANAGEMENT.md)** - Secrets and configuration management
+### 📊 [COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md)
+Competitive landscape analysis:
+- Detailed comparison with Boomi, CrewAI, LangChain, Pipecat, Kubiya AI
+- Market gaps and opportunities
+- Sutradhar's unique value proposition
+- Strategic positioning and recommendations
 
-### Integration Guides
-- **[LIVEKIT_SETUP_GUIDE.md](LIVEKIT_SETUP_GUIDE.md)** - LiveKit voice integration setup
-- **[BIDIRECTIONAL_INTEGRATIONS.md](BIDIRECTIONAL_INTEGRATIONS.md)** - Webhook and bidirectional integration guide
-- **[RESTFUL_ACTIONS_API.md](RESTFUL_ACTIONS_API.md)** - RESTful actions API documentation
+### 🔌 [API.md](API.md)
+Complete API reference:
+- API overview and quick start
+- Authentication and rate limiting
+- All API endpoints (RAG, LLM, Actions, Webhooks, Voice, EdTech)
+- External integrations (Hyperspell, OpenAI, LiveKit, Composio)
+- Bidirectional integrations (Slack, GitHub, Calendar)
+- Unified API documentation
+- Integration configuration details
 
-### Testing & Operations
-- **[ENDPOINT_TESTING_GUIDE.md](ENDPOINT_TESTING_GUIDE.md)** - Comprehensive endpoint testing guide
-- **[LOGGING_GUIDE.md](LOGGING_GUIDE.md)** - Logging system documentation
+### 💻 [DEVELOPMENT.md](DEVELOPMENT.md)
+Comprehensive development guide:
+- Quick start and setup instructions
+- Complete testing guide (API tests, edge cases, CI mode)
+- Apex Academy setup and features
+- Module-specific details (Worker, Nuxt, Convex)
+- Logging system and usage
+- Secrets management
+- LiveKit setup
+- Troubleshooting (common issues, errors, debugging)
+
+### 🚀 [DEPLOYMENT.md](DEPLOYMENT.md)
+Deployment and operations guide:
+- Production deployment
+- Environment setup
+- Docker deployment
+- Kubernetes deployment (complete configuration)
+- Monitoring and health checks
+- Scaling and performance tuning
+- Backup and recovery
 
 ## Quick Links
 
 - Main project README: [../README.md](../README.md)
-- Worker README: [../apps/worker/README.md](../apps/worker/README.md)

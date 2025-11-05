@@ -1,239 +1,152 @@
-# Sutradhar API
+# Sutradhar - Three-Layer Architecture
 
-A scalable, AI-powered assistant API service with retrieval-augmented generation (RAG), LLM integration, voice support, and external service actions.
+## Overview
 
-## 🚀 Quick Start
+Sutradhar is now a three-layer architecture:
 
-### Prerequisites
+1. **Sutradhar** - Pure agent orchestrator (agent-agnostic)
+2. **Optimus** - Backend agents layer (frontend-agnostic, uses Sutradhar)
+3. **Apex Academy** - Frontend application (uses Optimus)
 
-- Node.js 20+
-- npm or pnpm
-- Docker (optional, for containerized deployment)
+## Architecture
 
-### Installation
-
-```bash
-# Install dependencies
-make install
-
-# Or manually
-cd apps/worker && npm install
+```
+┌─────────────────┐
+│  Apex Academy   │  (Frontend - Port 3000)
+│   (Nuxt/Vue)    │
+└────────┬────────┘
+         │ HTTP
+         │ Calls Optimus API
+         ▼
+┌─────────────────┐
+│    Optimus      │  (Backend Agents - Port 4001)
+│  (EdTech API)   │
+└────────┬────────┘
+         │ HTTP
+         │ Uses Sutradhar Orchestrator
+         ▼
+┌─────────────────┐
+│   Sutradhar     │  (Orchestrator - Port 5000)
+│  (Orchestrator) │
+└────────┬────────┘
+         │
+         ├──► AgentMail (email agent)
+         ├──► Composio (action agent)
+         ├──► OpenAI (LLM agent)
+         ├──► Hyperspell (retrieval agent)
+         └──► Convex (data agent)
 ```
 
-### Development
+## Quick Start
+
+### 1. Start Sutradhar Orchestrator
 
 ```bash
-# Start the API server
-cd apps/worker && npm run dev
-
-# Or use Makefile
-make dev
+cd apps/sutradhar
+npm install
+npm run dev
 ```
 
-The API will be available at `http://localhost:2198`
+Runs on `http://localhost:5000`
 
-### Docker
+### 2. Start Optimus Backend
 
 ```bash
-# Build and start with Docker Compose
-make docker-up
-
-# Or manually
-docker-compose up -d
+cd apps/optimus
+npm install
+npm run dev
 ```
 
-## 📚 Documentation
+Runs on `http://localhost:4001`
 
-- **[API Documentation](API_README.md)** - Complete API reference
-- **[Architecture](ARCHITECTURE.md)** - System architecture and design
-- **[API Integrations](API_INTEGRATIONS.md)** - External service integrations
-- **[API Explanations](API_DETAILED_EXPLANATIONS.md)** - Detailed API explanations
-
-## 🔧 Configuration
-
-### Quick Setup
-
-1. **Create environment file** (non-sensitive config):
-   ```bash
-   cp apps/worker/src/env.example .env
-   ```
-
-2. **Create secrets file** (API keys, IDs, secrets):
-   ```bash
-   cp .secrets.example .secrets.env
-   # Edit .secrets.env and add your actual secrets
-   ```
-
-3. **Set file permissions** (security):
-   ```bash
-   chmod 600 .secrets.env
-   ```
-
-### Configuration Files
-
-- **`.env`** - Non-sensitive configuration (can be committed)
-- **`.secrets.env`** - Secrets and sensitive data (NEVER committed to git)
-
-**Important**: API keys, account IDs, and secrets should go in `.secrets.env`, not `.env`.
-
-See [SECRETS_MANAGEMENT.md](SECRETS_MANAGEMENT.md) for detailed secrets management guide.
-
-### Example Configuration
-
-**.env** (safe to commit):
-```bash
-PORT=2198
-NODE_ENV=development
-CONVEX_URL=http://localhost:3210
-MOCK_LLM=true
-```
-
-**.secrets.env** (NEVER commit):
-```bash
-OPENAI_API_KEY=sk-...
-PERPLEXITY_API_KEY=pplx-...
-HYPERSPELL_API_KEY=hs_...
-RUBE_API_KEY=...
-RUBE_PROJECT_ID=proj_...
-```
-
-See `apps/worker/src/env.ts` for all available environment variables.
-
-## 🏗️ Architecture
-
-Sutradhar is built with a scalable, microservices-oriented architecture:
-
-- **Plugin System**: Modular, interface-based plugins for all external services
-- **Horizontal Scaling**: Stateless design with Redis for distributed caching
-- **Fault Tolerance**: Circuit breakers, graceful degradation, retry logic
-- **Observability**: Prometheus metrics, structured logging, health checks
-- **API Versioning**: `/api/v1/*` endpoints with backward compatibility
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architecture documentation.
-
-## 📊 API Endpoints
-
-### Core Endpoints
-
-- `GET /` - API information
-- `GET /health` - Health check
-- `GET /health/full` - Full health status
-- `GET /metrics` - Prometheus metrics
-- `GET /api/v1/docs` - OpenAPI specification
-
-### API v1 Endpoints
-
-- `POST /api/v1/answer` - Retrieval-augmented generation
-- `POST /api/v1/llm/*` - LLM operations (answer, summarize, escalate)
-- `POST /api/v1/actions/*` - External service actions (Slack, Calendar, GitHub, Forum)
-- `POST /api/v1/email/send` - Send emails
-- `POST /api/v1/retrieval/index` - Index documents
-- `GET /api/v1/voice/token` - LiveKit voice token
-
-See [API_README.md](API_README.md) for complete API documentation.
-
-## 🧪 Testing
+### 3. Start Apex Academy Frontend
 
 ```bash
-# Run all tests
-cd apps/worker && npm run test
-
-# Run specific test suites
-npm run test:all      # Full API test suite
-npm run test:edge     # Edge cases and validation
+cd apps/apex-academy
+pnpm install
+pnpm dev
 ```
 
-## 🐳 Docker
+Runs on `http://localhost:3000`
 
-### Build
+## Layer Responsibilities
 
-```bash
-make docker-build
-# Or
-docker build -t sutradhar-worker -f apps/worker/Dockerfile .
-```
+### Layer 1: Sutradhar (Orchestrator)
 
-### Run
+**Purpose**: Pure agent orchestration engine, completely agent-agnostic.
 
-```bash
-make docker-up
-# Or
-docker-compose up -d
-```
+**Responsibilities**:
+- Agent registry and discovery
+- Agent runtime management (in-process, HTTP, container, process)
+- Load balancing and routing
+- Health monitoring and circuit breakers
+- Resource management
 
-### Health Check
+**API**: `http://localhost:5000/orchestrator`
 
-```bash
-curl http://localhost:2198/health
-```
+### Layer 2: Optimus (Backend Agents)
 
-## 📈 Monitoring
+**Purpose**: Creates backend agents for specific use cases by combining agents via Sutradhar.
 
-### Metrics
+**Responsibilities**:
+- Use case-specific agents (EdTech: Auth, Course, Tutoring, Quiz, etc.)
+- Agent composition (combines multiple Sutradhar agents)
+- Use case-specific business logic
+- Domain-specific routes (EdTech routes)
 
-Prometheus metrics available at `/metrics`:
+**API**: `http://localhost:4001`
 
-- `http_requests_total` - Total HTTP requests
-- `http_request_duration_seconds` - Request latency
-- `llm_requests_total` - LLM API calls
-- `action_requests_total` - Action executions
+### Layer 3: Apex Academy (Frontend)
 
-### Health Checks
+**Purpose**: Frontend application that uses Optimus backend.
 
-- `/health/heartbeat` - Simple ping (for load balancers)
-- `/health` - Basic health check
-- `/health/full` - Comprehensive health status
+**Responsibilities**:
+- UI components
+- Frontend routing
+- User interactions
+- Display and presentation
 
-### Logging
+**URL**: `http://localhost:3000`
 
-Structured JSON logging enabled with `LOG_JSON=true`:
+## Documentation
 
-```bash
-LOG_JSON=true npm run dev
-```
+- **[Architecture Refactor](docs/ARCHITECTURE_REFACTOR.md)** - Detailed architecture documentation
+- **[Migration Guide](docs/MIGRATION_GUIDE.md)** - Step-by-step migration guide
+- **[Architecture](docs/ARCHITECTURE.md)** - System architecture
+- **[Agent Orchestration](docs/AGENT_ORCHESTRATION.md)** - Agent orchestration design
+- **[Competitive Analysis](docs/COMPETITIVE_ANALYSIS.md)** - Market analysis
 
-## 🚀 Deployment
+## Environment Variables
 
-### Production Checklist
+All environment variables remain in root `.env` and `.secrets.env` files.
 
-1. ✅ Set all required environment variables
-2. ✅ Enable Redis cache (`REDIS_URL`)
-3. ✅ Configure CORS origins (`ALLOWED_ORIGINS`)
-4. ✅ Set `NODE_ENV=production`
-5. ✅ Configure Sentry (optional, `SENTRY_DSN`)
-6. ✅ Set up health check monitoring
-7. ✅ Configure load balancer with health checks
-8. ✅ Set up log aggregation
+**Key Variables**:
+- `SUTRADHAR_PORT=5000` - Orchestrator port
+- `OPTIMUS_PORT=4001` - Backend port
+- `SUTRADHAR_URL=http://localhost:5000` - Optimus → Sutradhar connection
+- `OPTIMUS_BASE_URL=http://localhost:4001` - Apex Academy → Optimus connection
 
-### Scaling
+## Development Status
 
-**Horizontal Scaling:**
-- Deploy multiple instances behind load balancer
-- Enable Redis for shared cache
-- Use external session store (Convex)
+### ✅ Completed
+- Directory structure created
+- Sutradhar orchestrator core
+- Runtime implementations (in-process, HTTP)
+- Orchestrator API routes
+- Sutradhar client for Optimus
+- Optimus server skeleton
+- Apex Academy renamed and configured
 
-**Vertical Scaling:**
-- Increase Node.js memory limit
-- Tune connection pool sizes
-- Optimize cache TTLs
+### ⏳ In Progress
+- Convert core services to Sutradhar agents
+- Move EdTech agents to Optimus
+- Update Optimus routes
+- End-to-end testing
 
-## 🔌 Services
+## Migration
 
-All services are retained and configurable:
+See [Migration Guide](docs/MIGRATION_GUIDE.md) for detailed migration steps.
 
-- ✅ **Answer Service** - RAG with retrieval
-- ✅ **LLM Service** - OpenAI, Perplexity
-- ✅ **Retrieval Service** - Hyperspell, BM25, file-scan
-- ✅ **Action Service** - Slack, Calendar, GitHub, Forum
-- ✅ **Email Service** - AgentMail integration
-- ✅ **Voice Service** - LiveKit integration
-- ✅ **Session Service** - Convex persistence
-
-## 📝 License
+## License
 
 ISC
-
-## 🤝 Contributing
-
-See architecture documentation for code organization and patterns.
-
