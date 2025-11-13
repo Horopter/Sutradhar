@@ -1,0 +1,27 @@
+{
+  "name": "@masterbolt/frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "@types/three": "^0.181.0",
+    "gsap": "^3.13.0",
+    "ky": "^1.7.1",
+    "lucide-vue-next": "^0.442.0",
+    "nuxt": "^3.13.0",
+    "pinia": "^2.2.6",
+    "three": "^0.181.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@nuxt/image": "^1.7.0",
+    "@nuxtjs/tailwindcss": "^6.12.1",
+    "@tailwindcss/typography": "^0.5.15"
+  }
+}

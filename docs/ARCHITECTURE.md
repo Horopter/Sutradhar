@@ -99,7 +99,7 @@ Sutradhar uses a **three-layer architecture** that separates concerns:
 
 1. **Sutradhar** (`apps/sutradhar/`) - Pure orchestrator (agent-agnostic)
 2. **Optimus** (`apps/optimus/`) - Backend agents layer (uses Sutradhar)
-3. **Apex Academy** (`apps/apex-academy/`) - Frontend application (uses Optimus)
+3. **Masterbolt** (`apps/masterbolt/`) - Frontend application (uses Optimus)
 
 See [ARCHITECTURE_REFACTOR.md](ARCHITECTURE_REFACTOR.md) for complete details.
 
@@ -266,7 +266,7 @@ apps/
 │   │   └── server.ts         # Optimus API server
 │   └── package.json
 │
-├── apex-academy/               # Layer 3: Frontend
+├── masterbolt/                 # Layer 3: Frontend
 │   ├── components/
 │   ├── pages/
 │   ├── composables/

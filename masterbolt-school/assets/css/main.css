@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   BASE LAYER - Global defaults
+   ============================================ */
+@layer base {
+  body {
+    @apply bg-black text-white font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-bold tracking-tight;
+  }
+}
+
+/* ============================================
+   COMPONENTS LAYER - Reusable component classes
+   ============================================ */
+@layer components {
+  /* Text Gradients */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, #ff4444 0%, #ff6666 25%, #ff8888 50%, #00aacc 75%, #00d4ff 100%);
+  }
+  
+  .text-gradient-blueshift {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-light;
+  }
+  
+  .text-gradient-redshift {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-secondary to-secondary-light;
+  }
+  
+  .text-gradient-theme {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, #ff4444, #00d4ff);
+  }
+  
+  /* Layout Components */
+  .glass {
+    @apply backdrop-blur-xl bg-slate-900/80 border border-slate-700/50;
+  }
+  
+  .section-padding {
+    @apply py-24 px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Typography Components - Hierarchical */
+  .section-heading {
+    @apply text-4xl sm:text-5xl font-bold mb-4 font-sans;
+  }
+  
+  .subsection-heading {
+    @apply text-3xl font-bold mb-4 font-sans;
+  }
+  
+  .card-heading {
+    @apply text-2xl font-bold mb-3 font-sans;
+  }
+  
+  .section-description {
+    @apply text-xl text-slate-200 max-w-3xl mx-auto;
+  }
+  
+  .body-text {
+    @apply text-lg text-slate-200;
+  }
+  
+  .body-text-sm {
+    @apply text-sm text-slate-400;
+  }
+  
+  /* List Components */
+  .feature-list {
+    @apply space-y-3 text-slate-200;
+  }
+  
+  .feature-item {
+    @apply flex items-start;
+  }
+  
+  .feature-icon {
+    @apply text-primary mr-3;
+  }
+  
+  /* Card Components */
+  .use-case-card {
+    @apply glass rounded-2xl p-6 hover:shadow-xl transition-all hover:-translate-y-2;
+  }
+  
+  .use-case-icon {
+    @apply text-4xl mb-4;
+  }
+  
+  .use-case-text {
+    @apply text-slate-200;
+  }
+}
+

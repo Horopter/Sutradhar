@@ -45,7 +45,7 @@ Complete API reference:
 Comprehensive development guide:
 - Quick start and setup instructions
 - Complete testing guide (API tests, edge cases, CI mode)
-- Apex Academy setup and features
+- Masterbolt setup and features
 - Module-specific details (Worker, Nuxt, Convex)
 - Logging system and usage
 - Secrets management

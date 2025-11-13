@@ -426,7 +426,7 @@ To implement these features, we'll:
 1. **Extend Existing Agents**: Enhance TutoringAgent, ProgressAgent, QuizAgent
 2. **Create New Agents**: Build AdaptiveLearningAgent, AnalyticsAgent, GamificationAgent
 3. **Add New Routes**: Extend Optimus API with new endpoints
-4. **Update Frontend**: Add new UI components in Apex Academy
+4. **Update Frontend**: Add new UI components in Masterbolt
 5. **Database Schema**: Extend Convex schema for new features
 6. **Integration**: Leverage Sutradhar orchestrator for all agent operations
 
@@ -435,7 +435,7 @@ To implement these features, we'll:
 ## 📝 Notes
 
 - All features leverage Sutradhar's agent orchestration
-- Maintain separation: Sutradhar (orchestration) → Optimus (agents) → Apex Academy (UI)
+- Maintain separation: Sutradhar (orchestration) → Optimus (agents) → Masterbolt (UI)
 - Use existing infrastructure (Convex, LiveKit, OpenAI, etc.)
 - Build incrementally, test thoroughly
 - Prioritize user experience and learning outcomes

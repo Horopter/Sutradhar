@@ -1,12 +1,12 @@
 #!/bin/bash
 # Comprehensive Health Check Script
-# Tests all layers: Sutradhar → Optimus → Apex Academy
+# Tests all layers: Sutradhar → Optimus → Masterbolt
 
 set -e
 
 SUTRADHAR_URL="${SUTRADHAR_URL:-http://localhost:5000}"
 OPTIMUS_URL="${OPTIMUS_URL:-http://localhost:4001}"
-APEX_ACADEMY_URL="${APEX_ACADEMY_URL:-http://localhost:3000}"
+MASTERBOLT_URL="${MASTERBOLT_URL:-http://localhost:3777}"
 
 echo "🏥 Sutradhar Architecture Health Checks"
 echo "========================================"
@@ -14,7 +14,7 @@ echo ""
 echo "Configuration:"
 echo "  Sutradhar:    $SUTRADHAR_URL"
 echo "  Optimus:      $OPTIMUS_URL"
-echo "  Apex Academy: $APEX_ACADEMY_URL"
+echo "  Masterbolt: $MASTERBOLT_URL"
 echo ""
 
 # Colors
@@ -189,17 +189,17 @@ if echo "$OPTIMUS_HEALTH" | grep -q '"ok":true'; then
     echo ""
 fi
 
-# ========== LEVEL 6: Apex Academy Integration ==========
-echo -e "${BLUE}🌐 Level 6: Apex Academy → Optimus Integration${NC}"
+# ========== LEVEL 6: Masterbolt Integration ==========
+echo -e "${BLUE}🌐 Level 6: Masterbolt → Optimus Integration${NC}"
 echo "---------------------------------------------"
 
-APEX_RESPONSE=$(curl -s --max-time 5 "$APEX_ACADEMY_URL" 2>/dev/null)
-if [ ! -z "$APEX_RESPONSE" ]; then
-    echo -e "${GREEN}✅ Apex Academy server is running${NC}"
+MASTERBOLT_RESPONSE=$(curl -s --max-time 5 "$MASTERBOLT_URL" 2>/dev/null)
+if [ ! -z "$MASTERBOLT_RESPONSE" ]; then
+    echo -e "${GREEN}✅ Masterbolt server is running${NC}"
     ((PASSED++))
 else
-    echo -e "${YELLOW}⚠️  Apex Academy server is not running${NC}"
-    echo "   Run: cd apps/apex-academy && pnpm dev"
+    echo -e "${YELLOW}⚠️  Masterbolt server is not running${NC}"
+    echo "   Run: cd apps/masterbolt && pnpm dev"
     ((FAILED++))
 fi
 
@@ -221,7 +221,7 @@ else
     echo "To start services:"
     echo "  1. Sutradhar:    cd apps/sutradhar && npm run dev"
     echo "  2. Optimus:      cd apps/optimus && npm run dev"
-    echo "  3. Apex Academy: cd apps/apex-academy && pnpm dev"
+    echo "  3. Masterbolt: cd apps/masterbolt && pnpm dev"
     exit 1
 fi
 

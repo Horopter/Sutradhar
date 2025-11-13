@@ -66,7 +66,7 @@ curl -X POST http://localhost:2198/api/v1/llm/chat \
 
 Currently, OAuth endpoints return dummy tokens. Implement proper authentication for production use.
 
-For Apex Academy (EdTech), guest mode is available:
+For Masterbolt (EdTech), guest mode is available:
 
 ```bash
 curl -X POST http://localhost:2198/auth/guest
@@ -266,7 +266,7 @@ const audioTrack = await createLocalAudioTrack()
 await room.localParticipant.publishTrack(audioTrack)
 ```
 
-### EdTech (Apex Academy)
+### EdTech (Masterbolt)
 
 **POST `/auth/guest`**
 Create guest session.

@@ -13,7 +13,7 @@
 ### Option 1: Automated Script (Recommended)
 
 ```bash
-./apps/launch-apex-academy.sh
+./apps/launch-masterbolt.sh
 ```
 
 This opens 3 terminal windows and starts all services automatically.
@@ -492,15 +492,15 @@ brew install jq  # macOS
 apt-get install jq  # Ubuntu
 ```
 
-## Apex Academy Setup
+## Masterbolt Setup
 
-Apex Academy is a complete Nuxt 3 EdTech platform built on top of Sutradhar.
+Masterbolt is a complete Nuxt 3 EdTech platform built on top of Sutradhar.
 
 ### Quick Start
 
 **Option 1: Automated Script (Recommended)**
 ```bash
-./apps/launch-apex-academy.sh
+./apps/launch-masterbolt.sh
 ```
 
 **Option 2: Manual (3 Terminal Windows)**

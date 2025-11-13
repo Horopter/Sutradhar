@@ -209,7 +209,7 @@ Return JSON: {errors: string[], warnings: string[], suggestions: string[]}`;
         'email-agent',
         'send',
         {
-          to: email || 'support@apex-academy.com',
+          to: email || 'support@masterbolt.com',
           subject: 'Escalation Request',
           text: `Reason: ${reason}\n\nSession ID: ${context?.sessionId || 'unknown'}`,
         },

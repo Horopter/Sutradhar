@@ -7,7 +7,7 @@ const fetch = require('node-fetch');
 
 const SUTRADHAR_URL = process.env.SUTRADHAR_URL || 'http://localhost:5000';
 const OPTIMUS_URL = process.env.OPTIMUS_URL || 'http://localhost:4001';
-const APEX_ACADEMY_URL = process.env.APEX_ACADEMY_URL || 'http://localhost:3000';
+const MASTERBOLT_URL = process.env.MASTERBOLT_URL || 'http://localhost:3777';
 
 const colors = {
   green: '\x1b[32m',
@@ -195,16 +195,16 @@ async function runTests() {
   }
   console.log('');
 
-  // ========== Level 7: Apex Academy Integration ==========
-  log('🌐 Level 7: Apex Academy → Optimus Integration', 'blue');
+  // ========== Level 7: Masterbolt Integration ==========
+  log('🌐 Level 7: Masterbolt → Optimus Integration', 'blue');
   log('-'.repeat(50), 'blue');
 
   total++;
-  const apexHealth = await testEndpoint(`${APEX_ACADEMY_URL}`);
-  if (check(apexHealth.ok, 'Apex Academy server is running')) {
+  const masterboltHealth = await testEndpoint(`${MASTERBOLT_URL}`);
+  if (check(masterboltHealth.ok, 'Masterbolt server is running')) {
     passed++;
   } else {
-    log('   Apex Academy server is not running. Run: cd apps/apex-academy && pnpm dev', 'yellow');
+    log('   Masterbolt server is not running. Run: cd apps/masterbolt && pnpm dev', 'yellow');
   }
   console.log('');
 

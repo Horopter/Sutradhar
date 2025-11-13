@@ -66,7 +66,7 @@ All features have been implemented end-to-end! The platform is now ready for use
 - ✅ `/assessment/*` - 5 assessment routes
 - ✅ `/code/*` - 4 enhanced code routes
 
-### 4. Frontend (Apex Academy)
+### 4. Frontend (Masterbolt)
 
 #### New Pages
 - ✅ `/analytics` - Learning analytics dashboard
@@ -117,9 +117,9 @@ All features have been implemented end-to-end! The platform is now ready for use
    npx convex dev
    ```
 
-4. **Start Apex Academy Frontend**
+4. **Start Masterbolt Frontend**
    ```bash
-   cd apps/apex-academy
+   cd apps/masterbolt
    pnpm install
    pnpm dev
    ```
@@ -226,7 +226,7 @@ While the core platform is complete, here are potential enhancements:
 
 ```
 ┌─────────────────┐
-│  Apex Academy   │  (Frontend - Port 3000)
+│   Masterbolt    │  (Frontend - Port 3777)
 │   (Nuxt/Vue)    │
 └────────┬────────┘
          │ HTTP

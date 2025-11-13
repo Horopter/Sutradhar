@@ -151,7 +151,7 @@ router.post('/lesson/:id/query', asyncHandler(async (req: Request, res: Response
   
   const lesson = lessonResult.data;
   const lessonTitle = lesson.title || '';
-  const lessonUrl = url || `http://localhost:3777/lesson/${lessonId}?courseSlug=${courseSlug}`; // Hardcoded Apex Academy URL
+  const lessonUrl = url || `http://localhost:3777/lesson/${lessonId}?courseSlug=${courseSlug}`; // Hardcoded Masterbolt URL
   
   // Use Sutradhar LLM agent to detect intent
   const intentPrompt = `Analyze the following user query and determine the intent. The user is viewing a lesson titled "${lessonTitle}".

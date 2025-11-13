@@ -6,13 +6,13 @@ Sutradhar is now a three-layer architecture:
 
 1. **Sutradhar** - Pure agent orchestrator (agent-agnostic)
 2. **Optimus** - Backend agents layer (frontend-agnostic, uses Sutradhar)
-3. **Apex Academy** - Frontend application (uses Optimus)
+3. **Masterbolt** - Frontend application (uses Optimus)
 
 ## Architecture
 
 ```
 ┌─────────────────┐
-│  Apex Academy   │  (Frontend - Port 3000)
+│   Masterbolt    │  (Frontend - Port 3777)
 │   (Nuxt/Vue)    │
 └────────┬────────┘
          │ HTTP
@@ -59,15 +59,15 @@ npm run dev
 
 Runs on `http://localhost:4001`
 
-### 3. Start Apex Academy Frontend
+### 3. Start Masterbolt Frontend
 
 ```bash
-cd apps/apex-academy
+cd apps/masterbolt
 pnpm install
 pnpm dev
 ```
 
-Runs on `http://localhost:3000`
+Runs on `http://localhost:3777`
 
 ## Layer Responsibilities
 
@@ -96,7 +96,7 @@ Runs on `http://localhost:3000`
 
 **API**: `http://localhost:4001`
 
-### Layer 3: Apex Academy (Frontend)
+### Layer 3: Masterbolt (Frontend)
 
 **Purpose**: Frontend application that uses Optimus backend.
 
@@ -106,7 +106,7 @@ Runs on `http://localhost:3000`
 - User interactions
 - Display and presentation
 
-**URL**: `http://localhost:3000`
+**URL**: `http://localhost:3777`
 
 ## Documentation
 
@@ -124,7 +124,7 @@ All environment variables remain in root `.env` and `.secrets.env` files.
 - `SUTRADHAR_PORT=5000` - Orchestrator port
 - `OPTIMUS_PORT=4001` - Backend port
 - `SUTRADHAR_URL=http://localhost:5000` - Optimus → Sutradhar connection
-- `OPTIMUS_BASE_URL=http://localhost:4001` - Apex Academy → Optimus connection
+- `OPTIMUS_BASE_URL=http://localhost:4001` - Masterbolt → Optimus connection
 
 ## Development Status
 
@@ -135,7 +135,7 @@ All environment variables remain in root `.env` and `.secrets.env` files.
 - Orchestrator API routes
 - Sutradhar client for Optimus
 - Optimus server skeleton
-- Apex Academy renamed and configured
+- Masterbolt renamed and configured
 
 ### ⏳ In Progress
 - Convert core services to Sutradhar agents

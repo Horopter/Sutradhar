@@ -5,7 +5,7 @@ This document describes the health check and integration testing strategy for th
 ## Architecture Layers
 
 ```
-Apex Academy (Frontend - Port 3000)
+Masterbolt (Frontend - Port 3777)
     ↓ HTTP
 Optimus (Backend Agents - Port 4001)
     ↓ HTTP (SutradharClient)
@@ -203,11 +203,11 @@ curl http://localhost:4001/catalog
 }
 ```
 
-### Level 7: Apex Academy → Optimus Integration
+### Level 7: Masterbolt → Optimus Integration
 
 **Endpoint**: `GET /` (root)
 
-**Test**: Verify Apex Academy can reach Optimus
+**Test**: Verify Masterbolt can reach Optimus
 
 ```bash
 curl http://localhost:3000
@@ -239,8 +239,8 @@ node scripts/test-integration.js
    # Terminal 2: Optimus
    cd apps/optimus && npm run dev
    
-   # Terminal 3: Apex Academy
-   cd apps/apex-academy && pnpm dev
+   # Terminal 3: Masterbolt
+   cd apps/masterbolt && pnpm dev
    ```
 
 2. **Run health checks**:

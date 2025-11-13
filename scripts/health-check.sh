@@ -5,7 +5,7 @@ set -e
 
 SUTRADHAR_URL="${SUTRADHAR_URL:-http://localhost:5000}"
 OPTIMUS_URL="${OPTIMUS_URL:-http://localhost:4001}"
-APEX_ACADEMY_URL="${APEX_ACADEMY_URL:-http://localhost:3000}"
+MASTERBOLT_URL="${MASTERBOLT_URL:-http://localhost:3777}"
 
 echo "🏥 Sutradhar Health Check & Integration Tests"
 echo "=============================================="
@@ -186,16 +186,16 @@ fi
 
 echo ""
 
-# ========== Level 7: Apex Academy Integration ==========
-echo "🌐 Level 7: Apex Academy → Optimus Integration"
+# ========== Level 7: Masterbolt Integration ==========
+echo "🌐 Level 7: Masterbolt → Optimus Integration"
 echo "---------------------------------------------"
 
-echo "Checking Apex Academy server..."
-if curl -s -f "${APEX_ACADEMY_URL}" > /dev/null; then
-    check_status "Apex Academy server is running"
+echo "Checking Masterbolt server..."
+if curl -s -f "${MASTERBOLT_URL}" > /dev/null; then
+    check_status "Masterbolt server is running"
 else
-    echo -e "${YELLOW}⚠️  Apex Academy server is not running at ${APEX_ACADEMY_URL}${NC}"
-    echo "  Run: cd apps/apex-academy && pnpm dev"
+    echo -e "${YELLOW}⚠️  Masterbolt server is not running at ${MASTERBOLT_URL}${NC}"
+    echo "  Run: cd apps/masterbolt && pnpm dev"
 fi
 
 echo ""
@@ -208,6 +208,6 @@ echo ""
 echo "To start all services:"
 echo "  1. Sutradhar: cd apps/sutradhar && npm run dev"
 echo "  2. Optimus:   cd apps/optimus && npm run dev"
-echo "  3. Apex Academy: cd apps/apex-academy && pnpm dev"
+echo "  3. Masterbolt: cd apps/masterbolt && pnpm dev"
 echo ""
 

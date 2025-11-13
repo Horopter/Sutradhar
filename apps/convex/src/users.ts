@@ -8,7 +8,7 @@ export const createGuest = mutation({
     const now = Date.now();
     
     const userId = await ctx.db.insert("users", {
-      email: `guest_${guestId}@apex.local`,
+      email: `guest_${guestId}@masterbolt.local`,
       name: `Guest ${guestId.substring(6, 12)}`,
       role: "guest",
       createdAt: now,
